@@ -1,18 +1,11 @@
 #include <DHT.h>
 #include <M5Stack.h>
+#include "m5lcd.h"
 
 #define DHTPIN 26
 #define DHTTYPE DHT22
 
-#define DEFAULT_BRIGHTNESS 100
-
-enum State
-{
-  temperature,
-  humidity
-};
-
-State state = State::temperature;
+state_n::StateEnum state = state_n::temperature;
 bool is_display_on = true;
 
 long lastMillis = 0;
@@ -24,8 +17,7 @@ DHT dht(DHTPIN, DHTTYPE);
 void setup()
 {
   M5.begin(true, false, false, false);
-  M5.Lcd.setTextSize(5);
-  M5.Lcd.fillScreen(BLACK);
+  m5lcd::begin();
 
   Serial.begin(9600);
   Serial.println("Started");
@@ -34,7 +26,7 @@ void setup()
 
   hum = read_humidity();
   temp = read_temperature();
-  update_display(state);
+  m5lcd::update_display(state, temp, hum);
 }
 
 void loop()
@@ -47,27 +39,27 @@ void loop()
   }
 }
 
-void update_values(State state)
+void update_values(state_n::StateEnum state)
 {
   switch (state)
   {
-  case State::temperature:
+  case state_n::temperature:
   {
     float new_temp = read_temperature();
     if (temp != new_temp)
     {
       temp = new_temp;
-      update_display(state);
+      m5lcd::update_display(state, temp, hum);
     }
     break;
   }
-  case State::humidity:
+  case state_n::humidity:
   {
     float new_hum = read_humidity();
     if (hum != new_hum)
     {
       hum = new_hum;
-      update_display(state);
+      m5lcd::update_display(state, temp, hum);
     }
     break;
   }
@@ -84,39 +76,13 @@ float read_humidity()
   return dht.readHumidity();
 }
 
-void set_state(State new_state)
+void set_state(state_n::StateEnum new_state)
 {
   state = new_state;
   Serial.print("State set to: ");
   Serial.println(state);
-  update_display(state);
+  m5lcd::update_display(state, temp, hum);
   return;
-}
-
-void toggle_display()
-{
-  if (is_display_on)
-  {
-    set_display_state(false);
-  }
-  else
-  {
-    set_display_state(true);
-  }
-}
-
-void set_display_state(bool is_on)
-{
-  if (is_on)
-  {
-    is_display_on = true;
-    M5.Lcd.setBrightness(DEFAULT_BRIGHTNESS);
-  }
-  else
-  {
-    is_display_on = false;
-    M5.Lcd.setBrightness(0);
-  }
 }
 
 void check_buttons()
@@ -125,39 +91,17 @@ void check_buttons()
 
   if (M5.BtnA.wasPressed())
   {
-    set_display_state(true);
-    set_state(State::temperature);
+    m5lcd::set_display_state(true);
+    set_state(state_n::temperature);
   }
   else if (M5.BtnB.wasPressed())
   {
-    set_display_state(true);
-    set_state(State::humidity);
+    m5lcd::set_display_state(true);
+    set_state(state_n::humidity);
   }
   else if (M5.BtnC.wasPressed())
   {
-    toggle_display();
-  }
-
-  return;
-}
-
-void update_display(State state)
-{
-  M5.Lcd.clear();
-
-  switch (state)
-  {
-  case State::temperature:
-    M5.Lcd.setCursor(100, 100);
-    M5.Lcd.setTextColor(GREEN);
-    M5.Lcd.print(temp);
-    break;
-
-  case State::humidity:
-    M5.Lcd.setCursor(100, 100);
-    M5.Lcd.setTextColor(RED);
-    M5.Lcd.print(hum);
-    break;
+    m5lcd::toggle_display();
   }
 
   return;
