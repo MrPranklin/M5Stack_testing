@@ -1,8 +1,7 @@
 #include <DHT.h>
 
-class DHT22_C
-{
-public:
+class DHT22_C {
+   public:
     DHT22_C(short int pin);
 
     ~DHT22_C();
@@ -15,7 +14,7 @@ public:
 
     bool is_sensor_ready(long interval);
 
-private:
+   private:
     long lastMillis = 0;
     DHT *dht = NULL;
 };
