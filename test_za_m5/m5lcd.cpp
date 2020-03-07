@@ -5,7 +5,7 @@
 
 namespace m5lcd
 {
-bool is_display_on = true;
+bool is_on = true;
 
 void begin()
 {
@@ -15,7 +15,7 @@ void begin()
 
 void toggle_display()
 {
-    if (is_display_on)
+    if (is_on)
     {
         set_display_state(false);
     }
@@ -25,16 +25,16 @@ void toggle_display()
     }
 }
 
-void set_display_state(bool is_on)
+void set_display_state(bool new_state)
 {
-    if (is_on)
+    if (new_state)
     {
-        is_display_on = true;
+        is_on = true;
         M5.Lcd.setBrightness(DEFAULT_BRIGHTNESS);
     }
     else
     {
-        is_display_on = false;
+        is_on = false;
         M5.Lcd.setBrightness(0);
     }
 }
@@ -59,6 +59,10 @@ void update_display(state_n::StateEnum state, float temp, float hum)
     }
 
     return;
+}
+
+bool is_display_on(){
+    return is_on;
 }
 
 } // namespace m5lcd

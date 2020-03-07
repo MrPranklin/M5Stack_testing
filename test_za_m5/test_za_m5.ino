@@ -1,18 +1,11 @@
-#include <DHT.h>
 #include <M5Stack.h>
 #include "m5lcd.h"
-
-#define DHTPIN 26
-#define DHTTYPE DHT22
+#include "dht22.h"
 
 state_n::StateEnum state = state_n::temperature;
-bool is_display_on = true;
 
-long lastMillis = 0;
 float temp = 0.0;
 float hum = 0.0;
-
-DHT dht(DHTPIN, DHTTYPE);
 
 void setup()
 {
@@ -22,10 +15,10 @@ void setup()
   Serial.begin(9600);
   Serial.println("Started");
 
-  dht.begin();
+  dht22::begin();
 
-  hum = read_humidity();
-  temp = read_temperature();
+  hum = dht22::read_humidity();
+  temp = dht22::read_temperature();
   m5lcd::update_display(state, temp, hum);
 }
 
@@ -33,7 +26,7 @@ void loop()
 {
   check_buttons();
 
-  if (is_display_on && is_sensor_ready(2000))
+  if (m5lcd::is_display_on() && dht22::is_sensor_ready(2000))
   {
     update_values(state);
   }
@@ -45,7 +38,7 @@ void update_values(state_n::StateEnum state)
   {
   case state_n::temperature:
   {
-    float new_temp = read_temperature();
+    float new_temp = dht22::read_temperature();
     if (temp != new_temp)
     {
       temp = new_temp;
@@ -55,7 +48,7 @@ void update_values(state_n::StateEnum state)
   }
   case state_n::humidity:
   {
-    float new_hum = read_humidity();
+    float new_hum = dht22::read_humidity();
     if (hum != new_hum)
     {
       hum = new_hum;
@@ -64,16 +57,6 @@ void update_values(state_n::StateEnum state)
     break;
   }
   }
-}
-
-float read_temperature()
-{
-  return dht.readTemperature();
-}
-
-float read_humidity()
-{
-  return dht.readHumidity();
 }
 
 void set_state(state_n::StateEnum new_state)
@@ -105,18 +88,4 @@ void check_buttons()
   }
 
   return;
-}
-
-bool is_sensor_ready(long interval)
-{
-  long currentMillis = millis();
-
-  if (currentMillis - lastMillis > interval)
-  {
-    lastMillis = currentMillis;
-    Serial.println("Sensor is ready");
-    return true;
-  }
-
-  return false;
 }
