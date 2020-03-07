@@ -1,8 +1,12 @@
 #include <M5Stack.h>
 #include "m5lcd.h"
-#include "dht22.h"
+#include "DHT22_C.h"
+
+#define DHTPIN 26
 
 state_n::StateEnum state = state_n::temperature;
+
+DHT22_C dht22(DHTPIN);
 
 float temp = 0.0;
 float hum = 0.0;
@@ -15,10 +19,11 @@ void setup()
   Serial.begin(9600);
   Serial.println("Started");
 
-  dht22::begin();
+  dht22.begin();
 
-  hum = dht22::read_humidity();
-  temp = dht22::read_temperature();
+  hum = dht22.read_humidity();
+  temp = dht22.read_temperature();
+
   m5lcd::update_display(state, temp, hum);
 }
 
@@ -26,7 +31,7 @@ void loop()
 {
   check_buttons();
 
-  if (m5lcd::is_display_on() && dht22::is_sensor_ready(2000))
+  if (m5lcd::is_display_on() && dht22.is_sensor_ready(2000))
   {
     update_values(state);
   }
@@ -38,7 +43,7 @@ void update_values(state_n::StateEnum state)
   {
   case state_n::temperature:
   {
-    float new_temp = dht22::read_temperature();
+    float new_temp = dht22.read_temperature();
     if (temp != new_temp)
     {
       temp = new_temp;
@@ -48,7 +53,7 @@ void update_values(state_n::StateEnum state)
   }
   case state_n::humidity:
   {
-    float new_hum = dht22::read_humidity();
+    float new_hum = dht22.read_humidity();
     if (hum != new_hum)
     {
       hum = new_hum;
