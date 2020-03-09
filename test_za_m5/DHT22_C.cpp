@@ -28,7 +28,6 @@ bool DHT22_C::is_sensor_ready(long interval) {
 
     if (currentMillis - lastMillis > interval) {
         lastMillis = currentMillis;
-        Serial.println("Sensor is ready");
         return true;
     }
 
