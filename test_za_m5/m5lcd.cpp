@@ -4,6 +4,7 @@
 #define DEFAULT_BRIGHTNESS 100
 
 void update_battery_level(int level){
+  M5.Lcd.setTextSize(2);
   M5.Lcd.setCursor(0,0);
   M5.Lcd.setTextColor(GREEN, BLACK);
   M5.Lcd.print(level);
@@ -15,7 +16,6 @@ namespace m5lcd {
 bool is_on = true;
 
 void begin() {
-    M5.Lcd.setTextSize(5);
     M5.Lcd.fillScreen(BLACK);
 }
 
@@ -40,7 +40,8 @@ void set_display_state(bool new_state) {
 void update_display(state_n::StateEnum state, float temp, float hum, int battery_level) {
     
     update_battery_level(battery_level);
-    
+    M5.Lcd.setTextSize(5);
+
     switch (state) {
         case state_n::temperature:
             M5.Lcd.setCursor(100, 100);
