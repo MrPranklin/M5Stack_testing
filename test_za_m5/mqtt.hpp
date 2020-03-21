@@ -4,7 +4,7 @@ typedef void (*ptr_cb)(char*, uint8_t*, unsigned int);
 
 class MQTT {
    public:
-    MQTT(const char* server, int port, ptr_cb callback, WiFiClient wifi_client);
+    MQTT(const IPAddress server, int port, ptr_cb callback, WiFiClient wifi_client);
     ~MQTT();
     bool connected();
     bool connect(const char* client_id);

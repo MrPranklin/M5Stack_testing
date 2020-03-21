@@ -1,6 +1,6 @@
 #include "mqtt.hpp"
 
-MQTT::MQTT(const char* server, int port, ptr_cb callback, WiFiClient wifi_client){
+MQTT::MQTT(const IPAddress server, int port, ptr_cb callback, WiFiClient wifi_client){
     client = new PubSubClient(wifi_client);
     client->setServer(server, port);
     client->setCallback(callback);

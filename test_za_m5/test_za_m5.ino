@@ -17,9 +17,16 @@ const char* ssid = "Pranklin";
 const char* password = "MrPranklin";
 const char* host = "M5Stack";
 
+const IPAddress mqtt_server = IPAddress(192,168,0,102);
+const int mqtt_port = 1883;
+const char* mqtt_in_topic = "M5/switch1";
+const char* mqtt_out_topic = "M5/out";
+const char* mqtt_client_id = "M5Stack_client";
+
 state_n::StateEnum state = state_n::temperature;
 
 DHT22_C dht22(DHTPIN);
+MQTT *mqtt;
 
 float temp = 0.0;
 float hum = 0.0;
@@ -125,4 +132,47 @@ void setup_wifi(){
         }
     }
     Serial.println("mDNS responder started");
+
+    Serial.println("Setting up MQTT");
+    //WiFiClient wifi_client;
+    //mqtt = new MQTT(mqtt_server, mqtt_port, callback, wifi_client);
+    //reconnect(*mqtt);
+    Serial.println("MQTT setup done");
   }
+
+  void callback(char* topic, byte* payload, unsigned int length) {
+  payload[length] = '\0';
+  String strTopic = String((char*)topic);
+  if(strTopic == mqtt_in_topic)
+    {
+    String switch1 = String((char*)payload);
+    if(switch1 == "ON")
+      {
+        Serial.println("ON");
+      }
+    else
+      {
+        Serial.println("OFF");
+      }
+    }
+}
+
+void reconnect(MQTT mqtt) {
+  while (!mqtt.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    
+    if (mqtt.connect(mqtt_client_id)) {
+      Serial.println("connected");
+      // Once connected, publish an announcement...
+      mqtt.publish(mqtt_out_topic,"This is M5Stack");
+      // ... and resubscribe
+      mqtt.subscribe(mqtt_in_topic);
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(mqtt.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(1000);
+    }
+  }
+}
