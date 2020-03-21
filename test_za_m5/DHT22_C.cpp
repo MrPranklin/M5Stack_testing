@@ -1,4 +1,4 @@
-#include "DHT22_C.h"
+#include "DHT22_C.hpp"
 
 #define DHTTYPE DHT22
 

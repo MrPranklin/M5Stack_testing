@@ -1,7 +1,7 @@
 #include <M5Stack.h>
-#include "DHT22_C.h"
-#include "m5lcd.h"
-#include "ota.h"
+#include "DHT22_C.hpp"
+#include "m5lcd.hpp"
+#include "ota.hpp"
 
 #include <ESPmDNS.h>
 #include <Update.h>
@@ -31,7 +31,7 @@ void setup() {
     hum = dht22.read_humidity();
     temp = dht22.read_temperature();
 
-    m5lcd::update_display(state, temp, hum);
+    m5lcd::update_display(state, temp, hum, 10);
     
     Serial.println("Setup finished");
 }
@@ -52,7 +52,7 @@ void update_values(state_n::StateEnum state) {
             float new_temp = dht22.read_temperature();
             if (temp != new_temp) {
                 temp = new_temp;
-                m5lcd::update_display(state, temp, hum);
+                m5lcd::update_display(state, temp, hum, 10);
             }
             break;
         }
@@ -60,7 +60,7 @@ void update_values(state_n::StateEnum state) {
             float new_hum = dht22.read_humidity();
             if (hum != new_hum) {
                 hum = new_hum;
-                m5lcd::update_display(state, temp, hum);
+                m5lcd::update_display(state, temp, hum, 10);
             }
             break;
         }
@@ -71,7 +71,7 @@ void set_state(state_n::StateEnum new_state) {
     state = new_state;
     Serial.print("State set to: ");
     Serial.println(state);
-    m5lcd::update_display(state, temp, hum);
+    m5lcd::update_display(state, temp, hum, 10);
     return;
 }
 
