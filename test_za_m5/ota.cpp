@@ -5,7 +5,7 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 
-#define host = "M5Stack";
+#define host "M5Stack";
 
 WebServer server(80);
 
