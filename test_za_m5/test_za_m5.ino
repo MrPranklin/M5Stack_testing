@@ -37,8 +37,7 @@ void setup() {
     Wire.begin();  // required for battery status
     M5.begin();
 
-    ledcDetachPin(SPEAKER_PIN); // less crackling
-
+    ledcDetachPin(SPEAKER_PIN); // turn off speaker, less crackling
     setup_wifi();
 
     ota::begin();

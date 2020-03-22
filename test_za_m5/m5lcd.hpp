@@ -1,3 +1,6 @@
+#ifndef M5LCD_H
+#define M5LCD_H
+
 #include "state_n.hpp"
 
 namespace m5lcd {
@@ -11,3 +14,5 @@ void update_display(state_n::StateEnum state, float temp, float hum, int battery
 
 bool is_display_on();
 }  // namespace m5lcd
+
+#endif

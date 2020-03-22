@@ -1,3 +1,6 @@
+#ifndef DHT22_C_H
+#define DHT22_C_H
+
 #include <DHT.h>
 
 class DHT22_C {
@@ -18,3 +21,5 @@ class DHT22_C {
     long lastMillis = 0;
     DHT *dht = NULL;
 };
+
+#endif
