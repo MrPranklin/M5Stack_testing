@@ -35,7 +35,9 @@ float hum = 0.0;
 void setup() {
     Serial.begin(115200);
     Wire.begin();  // required for battery status
-    M5.begin(true, false, false, false);
+    M5.begin();
+
+    ledcDetachPin(SPEAKER_PIN); // less crackling
 
     setup_wifi();
 
