@@ -44,8 +44,8 @@ void setup() {
     m5lcd::begin();
     dht22.begin();
 
-    hum = dht22.read_humidity();
-    temp = dht22.read_temperature();
+    hum = dht22.readHumidity();
+    temp = dht22.readTemperature();
 
     m5lcd::update_display(state, temp, hum, m5battery::get_battery_level());
 
@@ -62,14 +62,14 @@ void loop() {
 
     check_buttons();
 
-    if (m5lcd::is_display_on() && dht22.is_sensor_ready(2000)) {
+    if (m5lcd::is_display_on()) {
         update_values(state);
     }
 }
 
 void update_values(state_n::StateEnum state) {
-    temp = dht22.read_temperature();
-    hum = dht22.read_humidity();
+    temp = dht22.readTemperature();
+    hum = dht22.readHumidity();
 
     switch (state) {
         case state_n::temperature: {

@@ -2,22 +2,27 @@
 #define DHT22_C_H
 
 #include <DHT.h>
+#include "HumSensor/HumSensor.hpp"
+#include "TempSensor/TempSensor.hpp"
 
-class DHT22_C {
-   public:
+class DHT22_C : HumSensor, TempSensor {
+public:
     DHT22_C(short int pin);
 
     ~DHT22_C();
 
     void begin();
 
-    float read_temperature();
+    float readTemperature();
 
-    float read_humidity();
+    float readHumidity();
 
-    bool is_sensor_ready(long interval);
+private:
+    bool isSensorReady(long interval);
 
-   private:
+    float lastTemp;
+    float lastHum;
+
     long lastMillis = 0;
     DHT *dht = NULL;
 };
