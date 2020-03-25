@@ -24,7 +24,7 @@ const char *ssid = "Pranklin";
 const char *password = "MrPranklin";
 const char *host = "M5Stack";
 
-const IPAddress mqtt_server = IPAddress(192, 168, 0, 102);
+const IPAddress mqtt_server = IPAddress(192, 168, 0, 104);
 const int mqtt_port = 1883;
 
 state_n::StateEnum state = state_n::temperature;
@@ -32,7 +32,7 @@ state_n::StateEnum state = state_n::temperature;
 DHT22_C dht22(DHTPIN);
 WiFiClient wifi_client;
 PubSubClient mqtt_client(wifi_client);
-HeatControl *heatControl;
+//HeatControl *heatControl;
 
 float temp = 0.0;
 float hum = 0.0;
@@ -42,31 +42,36 @@ void setup() {
     Wire.begin();  // required for battery status
     M5.begin();
 
+    m5lcd::begin();
+
+    m5lcd::show_setting_up();
+
     ledcDetachPin(SPEAKER_PIN); // turn off speaker, less crackling
     setup_wifi();
 
     ota::begin();
-    m5lcd::begin();
     dht22.begin();
 
     hum = dht22.readHumidity();
     temp = dht22.readTemperature();
 
+    m5lcd::clear();
+
     m5lcd::update_display(state, temp, hum, m5battery::get_battery_level());
 
-    Cooler *fanController = new FanController(20);
-    Heater *mockHeater = new MockHeater(19);
-
-    std::vector<Cooler*> coolers;
-    coolers.push_back(fanController);
-
-    std::vector<Heater*> heaters;
-    heaters.push_back(mockHeater);
-
-    heatControl = new HeatControl (&dht22, &coolers, &heaters);
-
-    heatControl->setTargetTemp(20);
-    heatControl->enable();
+//    Cooler *fanController = new FanController(20);
+//    Heater *mockHeater = new MockHeater(19);
+//
+//    std::vector<Cooler*> coolers;
+//    coolers.push_back(fanController);
+//
+//    std::vector<Heater*> heaters;
+//    heaters.push_back(mockHeater);
+//
+//    heatControl = new HeatControl (&dht22, &coolers, &heaters);
+//
+//    heatControl->setTargetTemp(20);
+//    heatControl->enable();
 
     Serial.println("Setup finished");
 }
@@ -74,7 +79,7 @@ void setup() {
 void loop() {
     ota::handle_client();
 
-    heatControl->update();
+//    heatControl->update();
 
     if (!mqtt_client.loop()) {
         Serial.println("MQTT disconnected");

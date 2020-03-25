@@ -21,6 +21,7 @@ void DHT22_C::begin() {
 float DHT22_C::readTemperature() {
     if (isSensorReady(SENSOR_REST_TIME)) {
         lastTemp = dht->readTemperature();
+        lastHum = dht->readHumidity();
     }
     return lastTemp;
 }
@@ -28,6 +29,7 @@ float DHT22_C::readTemperature() {
 float DHT22_C::readHumidity() {
     if (isSensorReady(SENSOR_REST_TIME)) {
         lastHum = dht->readHumidity();
+        lastTemp = dht->readTemperature();
     }
     return lastHum;
 }

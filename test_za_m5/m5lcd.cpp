@@ -59,6 +59,17 @@ void update_display(state_n::StateEnum state, float temp, float hum, int battery
     return;
 }
 
+void show_setting_up() {
+    M5.Lcd.setTextSize(3);
+    M5.Lcd.setCursor(50, 100);
+    M5.Lcd.setTextColor(RED, BLACK);
+    M5.Lcd.print("Setting up...");
+}
+
+void clear() {
+    M5.Lcd.clear();
+}
+
 bool is_display_on() {
     return is_on;
 }
