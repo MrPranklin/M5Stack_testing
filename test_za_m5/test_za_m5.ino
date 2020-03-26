@@ -147,7 +147,7 @@ void setup_wifi() {
     Serial.println("");
 
     // Wait for connection
-    while (WiFi.status() != WL_CONNECTED) {
+    while (WiFi.isConnected()) {
         delay(500);
         Serial.print(".");
     }
@@ -156,6 +156,7 @@ void setup_wifi() {
     Serial.println(ssid);
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
+    WiFi.setAutoReconnect(true);
 
     /*use mdns for host name resolution*/
     if (!MDNS.begin(host)) {  //http://m5stack.local
