@@ -6,24 +6,26 @@
 #include <WiFiClient.h>
 
 #include "DHT22_C.hpp"
-#include "m5battery.hpp"
 #include "m5lcd.hpp"
 #include "mqtt.hpp"
 #include "ota.hpp"
 
 #define DHTPIN 26
 
-void callback(char* topic, byte* payload, unsigned int length);
+void callback(char *topic, byte *payload, unsigned int length);
+
 void setup_wifi();
 
-const char* ssid = "Pranklin";
-const char* password = "MrPranklin";
-const char* host = "M5Stack";
+const char *ssid = "Pranklin";
+const char *password = "MrPranklin";
+const char *host = "M5Stack";
 
-const IPAddress mqtt_server = IPAddress(192, 168, 0, 102);
+const IPAddress mqtt_server = IPAddress(192, 168, 0, 104);
 const int mqtt_port = 1883;
 
 state_n::StateEnum state = state_n::temperature;
+
+long mqttLastMillis = 0;
 
 DHT22_C dht22(DHTPIN);
 WiFiClient wifi_client;
@@ -34,26 +36,36 @@ float hum = 0.0;
 
 void setup() {
     Serial.begin(115200);
-    Wire.begin();  // required for battery status
     M5.begin();
+    M5.Power.begin();
+    M5.Power.setPowerBoostKeepOn(false); // dont always output power
+
+    m5lcd::begin();
+
+    m5lcd::show_setting_up();
 
     ledcDetachPin(SPEAKER_PIN); // turn off speaker, less crackling
     setup_wifi();
 
     ota::begin();
-    m5lcd::begin();
     dht22.begin();
 
     hum = dht22.readHumidity();
     temp = dht22.readTemperature();
 
-    m5lcd::update_display(state, temp, hum, m5battery::get_battery_level());
+    m5lcd::clear();
+
+    m5lcd::update_display(state, temp, hum);
 
     Serial.println("Setup finished");
+    m5lcd::showMessage("Setup done");
+    m5lcd::clear();
 }
 
 void loop() {
     ota::handle_client();
+
+//    heatControl->update();
 
     if (!mqtt_client.loop()) {
         Serial.println("MQTT disconnected");
@@ -73,28 +85,32 @@ void update_values(state_n::StateEnum state) {
 
     switch (state) {
         case state_n::temperature: {
-            m5lcd::update_display(state, temp, hum, m5battery::get_battery_level());
+            m5lcd::update_display(state, temp, hum);
             break;
         }
         case state_n::humidity: {
-            m5lcd::update_display(state, temp, hum, m5battery::get_battery_level());
+            m5lcd::update_display(state, temp, hum);
             break;
         }
     }
-    mqtt::publish_temperature(mqtt_client, temp);
-    mqtt::publish_humidity(mqtt_client, hum);
+
+    if (mqtt::shouldUpdate(millis(), mqttLastMillis)) {
+        mqtt::publish_temperature(mqtt_client, temp);
+        mqtt::publish_humidity(mqtt_client, hum);
+        mqttLastMillis = millis();
+    }
 }
 
 void set_state(state_n::StateEnum new_state) {
     state = new_state;
     Serial.print("State set to: ");
     Serial.println(state);
-    m5lcd::update_display(state, temp, hum, m5battery::get_battery_level());
+    m5lcd::update_display(state, temp, hum);
     return;
 }
 
 void check_buttons() {
-    M5.update();
+    M5.update(); // reads button state
 
     if (M5.BtnA.wasPressed()) {
         m5lcd::set_display_state(true);
@@ -115,7 +131,8 @@ void setup_wifi() {
     Serial.println("");
 
     // Wait for connection
-    while (WiFi.status() != WL_CONNECTED) {
+    m5lcd::showMessage("Connecting WiFi");
+    while (WiFi.isConnected()) {
         delay(500);
         Serial.print(".");
     }
@@ -124,8 +141,11 @@ void setup_wifi() {
     Serial.println(ssid);
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
+    m5lcd::clear();
+    WiFi.setAutoReconnect(true);
 
     /*use mdns for host name resolution*/
+    m5lcd::showMessage("Setting mdns");
     if (!MDNS.begin(host)) {  //http://m5stack.local
         Serial.println("Error setting up MDNS responder!");
         while (1) {
@@ -133,6 +153,7 @@ void setup_wifi() {
         }
     }
     Serial.println("mDNS responder started");
+    m5lcd::clear();
 
     Serial.println("Setting up MQTT");
     mqtt_client.setServer(mqtt_server, mqtt_port);
