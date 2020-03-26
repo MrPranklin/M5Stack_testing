@@ -9,9 +9,6 @@
 #include "m5lcd.hpp"
 #include "mqtt.hpp"
 #include "ota.hpp"
-#include "HeatControl.hpp"
-#include "FanController.hpp"
-#include "MockHeater.hpp"
 
 #define DHTPIN 26
 
@@ -33,7 +30,6 @@ long mqttLastMillis = 0;
 DHT22_C dht22(DHTPIN);
 WiFiClient wifi_client;
 PubSubClient mqtt_client(wifi_client);
-//HeatControl *heatControl;
 
 float temp = 0.0;
 float hum = 0.0;
@@ -60,20 +56,6 @@ void setup() {
     m5lcd::clear();
 
     m5lcd::update_display(state, temp, hum);
-
-//    Cooler *fanController = new FanController(20);
-//    Heater *mockHeater = new MockHeater(19);
-//
-//    std::vector<Cooler*> coolers;
-//    coolers.push_back(fanController);
-//
-//    std::vector<Heater*> heaters;
-//    heaters.push_back(mockHeater);
-//
-//    heatControl = new HeatControl (&dht22, &coolers, &heaters);
-//
-//    heatControl->setTargetTemp(20);
-//    heatControl->enable();
 
     Serial.println("Setup finished");
     m5lcd::showMessage("Setup done");
@@ -161,8 +143,6 @@ void setup_wifi() {
     Serial.println(WiFi.localIP());
     m5lcd::clear();
     WiFi.setAutoReconnect(true);
-
-
 
     /*use mdns for host name resolution*/
     m5lcd::showMessage("Setting mdns");
