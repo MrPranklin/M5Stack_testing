@@ -76,6 +76,8 @@ void setup() {
 //    heatControl->enable();
 
     Serial.println("Setup finished");
+    m5lcd::showMessage("Setup done");
+    m5lcd::clear();
 }
 
 void loop() {
@@ -147,6 +149,7 @@ void setup_wifi() {
     Serial.println("");
 
     // Wait for connection
+    m5lcd::showMessage("Connecting WiFi");
     while (WiFi.isConnected()) {
         delay(500);
         Serial.print(".");
@@ -156,9 +159,13 @@ void setup_wifi() {
     Serial.println(ssid);
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
+    m5lcd::clear();
     WiFi.setAutoReconnect(true);
 
+
+
     /*use mdns for host name resolution*/
+    m5lcd::showMessage("Setting mdns");
     if (!MDNS.begin(host)) {  //http://m5stack.local
         Serial.println("Error setting up MDNS responder!");
         while (1) {
@@ -166,6 +173,7 @@ void setup_wifi() {
         }
     }
     Serial.println("mDNS responder started");
+    m5lcd::clear();
 
     Serial.println("Setting up MQTT");
     mqtt_client.setServer(mqtt_server, mqtt_port);

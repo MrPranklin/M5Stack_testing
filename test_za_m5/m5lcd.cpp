@@ -1,7 +1,7 @@
 #include "m5lcd.hpp"
 #include <M5Stack.h>
 
-#define DEFAULT_BRIGHTNESS 100
+#define DEFAULT_BRIGHTNESS 50
 
 void update_battery_level(int level){
   M5.Lcd.setTextSize(2);
@@ -17,6 +17,7 @@ bool is_on = true;
 
 void begin() {
     M5.Lcd.fillScreen(BLACK);
+    M5.Lcd.setBrightness(DEFAULT_BRIGHTNESS);
 }
 
 void toggle_display() {
@@ -60,19 +61,29 @@ void update_display(state_n::StateEnum state, float temp, float hum) {
 }
 
 void show_setting_up() {
+    clear();
     M5.Lcd.setTextSize(3);
     M5.Lcd.setCursor(50, 100);
     M5.Lcd.setTextColor(RED, BLACK);
     M5.Lcd.print("Setting up...");
 }
 
-void clear() {
-    M5.Lcd.clear();
-}
+    void clear() {
+        M5.Lcd.clear();
+    }
 
-bool is_display_on() {
-    return is_on;
-}
+    bool is_display_on() {
+        return is_on;
+    }
+
+    void showMessage(const char *message) {
+        clear();
+
+        M5.Lcd.setTextSize(3);
+        M5.Lcd.setCursor(50, 100);
+        M5.Lcd.setTextColor(RED, BLACK);
+        M5.Lcd.print(message);
+    }
 
 
 }  // namespace m5lcd

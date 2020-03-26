@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <stdlib.h>
+#include "m5lcd.hpp"
 
 const char *mqtt_in_topic = "M5/switch1";
 const char *mqtt_out_topic = "M5/out";
@@ -19,6 +20,7 @@ namespace mqtt {
     void reconnect(PubSubClient client) {
         while (!client.connected()) {
             Serial.print("Attempting MQTT connection...");
+            m5lcd::showMessage("Connecting MQTT");
 
         if (client.connect(mqtt_client_id)) {
             Serial.print("connected as ");
@@ -29,6 +31,7 @@ namespace mqtt {
             client.subscribe(mqtt_in_topic);
             Serial.print("Subscribed to ");
             Serial.println(mqtt_in_topic);
+            m5lcd::clear();
         } else {
             Serial.print("failed, rc=");
             Serial.print(client.state());
