@@ -29,6 +29,8 @@ const int mqtt_port = 1883;
 
 state_n::StateEnum state = state_n::temperature;
 
+long mqttLastMillis = 0;
+
 DHT22_C dht22(DHTPIN);
 WiFiClient wifi_client;
 PubSubClient mqtt_client(wifi_client);
@@ -107,8 +109,12 @@ void update_values(state_n::StateEnum state) {
             break;
         }
     }
-    mqtt::publish_temperature(mqtt_client, temp);
-    mqtt::publish_humidity(mqtt_client, hum);
+
+    if (mqtt::shouldUpdate(millis(), mqttLastMillis)) {
+        mqtt::publish_temperature(mqtt_client, temp);
+        mqtt::publish_humidity(mqtt_client, hum);
+        mqttLastMillis = millis();
+    }
 }
 
 void set_state(state_n::StateEnum new_state) {

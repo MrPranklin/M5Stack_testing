@@ -3,20 +3,22 @@
 #include <Arduino.h>
 #include <stdlib.h>
 
-const char* mqtt_in_topic = "M5/switch1";
-const char* mqtt_out_topic = "M5/out";
-const char* mqtt_out_topic_temp = "M5/temp";
-const char* mqtt_out_topic_hum = "M5/hum";
-const char* mqtt_client_id = "M5Stack_client";
+const char *mqtt_in_topic = "M5/switch1";
+const char *mqtt_out_topic = "M5/out";
+const char *mqtt_out_topic_temp = "M5/temp";
+const char *mqtt_out_topic_hum = "M5/hum";
+const char *mqtt_client_id = "M5Stack_client";
+
+#define INTERVAL 10000
 
 namespace mqtt {
-void send_data(PubSubClient client, const char* topic, const char* payload) {
-    client.publish(topic, payload);
-}
+    void send_data(PubSubClient client, const char *topic, const char *payload) {
+        client.publish(topic, payload);
+    }
 
-void reconnect(PubSubClient client) {
-    while (!client.connected()) {
-        Serial.print("Attempting MQTT connection...");
+    void reconnect(PubSubClient client) {
+        while (!client.connected()) {
+            Serial.print("Attempting MQTT connection...");
 
         if (client.connect(mqtt_client_id)) {
             Serial.print("connected as ");
@@ -66,4 +68,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
 }
 
+    bool shouldUpdate(long millis, long lastMillis) {
+        if (millis - lastMillis > INTERVAL) {
+            return true;
+        }
+        return false;
+    }
 };
