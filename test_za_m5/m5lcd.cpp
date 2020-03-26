@@ -37,9 +37,9 @@ void set_display_state(bool new_state) {
     }
 }
 
-void update_display(state_n::StateEnum state, float temp, float hum, int battery_level) {
-    
-    update_battery_level(battery_level);
+void update_display(state_n::StateEnum state, float temp, float hum) {
+
+    update_battery_level(M5.Power.getBatteryLevel());
     M5.Lcd.setTextSize(5);
 
     switch (state) {

@@ -6,7 +6,6 @@
 #include <WiFiClient.h>
 
 #include "DHT22_C.hpp"
-#include "m5battery.hpp"
 #include "m5lcd.hpp"
 #include "mqtt.hpp"
 #include "ota.hpp"
@@ -41,8 +40,9 @@ float hum = 0.0;
 
 void setup() {
     Serial.begin(115200);
-    Wire.begin();  // required for battery status
     M5.begin();
+    M5.Power.begin();
+    M5.Power.setPowerBoostKeepOn(false); // dont always output power
 
     m5lcd::begin();
 
@@ -59,7 +59,7 @@ void setup() {
 
     m5lcd::clear();
 
-    m5lcd::update_display(state, temp, hum, m5battery::get_battery_level());
+    m5lcd::update_display(state, temp, hum);
 
 //    Cooler *fanController = new FanController(20);
 //    Heater *mockHeater = new MockHeater(19);
@@ -101,11 +101,11 @@ void update_values(state_n::StateEnum state) {
 
     switch (state) {
         case state_n::temperature: {
-            m5lcd::update_display(state, temp, hum, m5battery::get_battery_level());
+            m5lcd::update_display(state, temp, hum);
             break;
         }
         case state_n::humidity: {
-            m5lcd::update_display(state, temp, hum, m5battery::get_battery_level());
+            m5lcd::update_display(state, temp, hum);
             break;
         }
     }
@@ -121,12 +121,12 @@ void set_state(state_n::StateEnum new_state) {
     state = new_state;
     Serial.print("State set to: ");
     Serial.println(state);
-    m5lcd::update_display(state, temp, hum, m5battery::get_battery_level());
+    m5lcd::update_display(state, temp, hum);
     return;
 }
 
 void check_buttons() {
-    M5.update();
+    M5.update(); // reads button state
 
     if (M5.BtnA.wasPressed()) {
         m5lcd::set_display_state(true);
