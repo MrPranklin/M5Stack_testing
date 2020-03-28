@@ -8,9 +8,17 @@ const char *mqtt_out_topic = "NOVA/out";
 const char *mqtt_client_id = "nova_cooling_heating";
 
 namespace mqtt {
-    void send_data(PubSubClient client, const char *topic, const char *payload) {
-        client.publish(topic, payload);
-        Serial.print("MQTT: published "); Serial.print(payload); Serial.print(" to "); Serial.println(topic);
+    bool send_data(PubSubClient client, const char *topic, const char *payload, bool retain) {
+        bool status = client.publish(topic, payload, retain);
+        if (status) {
+            Serial.print("MQTT: published ");
+            Serial.print(payload);
+            Serial.print(" to ");
+            Serial.println(topic);
+        } else {
+            Serial.println("MQTT: publish failed");
+        }
+        return status;
     }
 
     void reconnect(PubSubClient client) {
@@ -41,18 +49,18 @@ namespace mqtt {
     }
 
     void confirmCoolingOn(PubSubClient client){
-        send_data(client, mqtt_state_cooling, "ON");
+        send_data(client, mqtt_state_cooling, "ON", true);
     }
 
     void confirmCoolingOff(PubSubClient client){
-        send_data(client, mqtt_state_cooling, "OFF");
+        send_data(client, mqtt_state_cooling, "OFF", true);
     }
 
     void confirmHeatingOn(PubSubClient client){
-        send_data(client, mqtt_state_heating, "ON");
+        send_data(client, mqtt_state_heating, "ON", true);
     }
 
     void confirmHeatingOff(PubSubClient client){
-        send_data(client, mqtt_state_heating, "OFF");
+        send_data(client, mqtt_state_heating, "OFF", true);
     }
 }

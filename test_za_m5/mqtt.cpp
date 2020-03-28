@@ -17,12 +17,17 @@ const char *mqtt_command_heating = "M5/heating";
 #define INTERVAL 10000
 
 namespace mqtt {
-    void send_data(PubSubClient client, const char *topic, const char *payload) {
-        client.publish(topic, payload);
-        Serial.print("MQTT: published ");
-        Serial.print(payload);
-        Serial.print(" to ");
-        Serial.println(topic);
+    bool send_data(PubSubClient client, const char *topic, const char *payload, bool retain) {
+        bool status = client.publish(topic, payload, retain);
+        if (status) {
+            Serial.print("MQTT: published ");
+            Serial.print(payload);
+            Serial.print(" to ");
+            Serial.println(topic);
+        } else {
+            Serial.println("MQTT: publish failed");
+        }
+        return status;
     }
 
     void reconnect(PubSubClient client) {
@@ -53,13 +58,13 @@ namespace mqtt {
     void publish_temperature(PubSubClient client, float temperature) {
         char output[10];
         dtostrf(temperature, 6, 2, output);
-        send_data(client, mqtt_out_topic_temp, output);
+        send_data(client, mqtt_out_topic_temp, output, false);
     }
 
     void publish_humidity(PubSubClient client, float humidity) {
         char output[10];
         dtostrf(humidity, 6, 2, output);
-        send_data(client, mqtt_out_topic_hum, output);
+        send_data(client, mqtt_out_topic_hum, output, false);
     }
 
     void callback(char *topic, byte *payload, unsigned int length) {
@@ -83,18 +88,18 @@ namespace mqtt {
     }
 
     void sendTurnOnCooling(PubSubClient client) {
-        send_data(client, mqtt_command_cooling, "ON");
+        send_data(client, mqtt_command_cooling, "ON", true);
     }
 
     void sendTurnOffCooling(PubSubClient client) {
-        send_data(client, mqtt_command_cooling, "OFF");
+        send_data(client, mqtt_command_cooling, "OFF", true);
     }
 
     void sendTurnOnHeating(PubSubClient client) {
-        send_data(client, mqtt_command_heating, "ON");
+        send_data(client, mqtt_command_heating, "ON", true);
     }
 
     void sendTurnOffHeating(PubSubClient client) {
-        send_data(client, mqtt_command_heating, "OFF");
+        send_data(client, mqtt_command_heating, "OFF", true);
     }
 };

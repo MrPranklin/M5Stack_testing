@@ -4,7 +4,7 @@
 #include <PubSubClient.h>
 
 namespace mqtt {
-    void send_data(PubSubClient client, const char *topic, const char *payload);
+    bool send_data(PubSubClient client, const char *topic, const char *payload, bool retain);
 
     void reconnect(PubSubClient client);
 
