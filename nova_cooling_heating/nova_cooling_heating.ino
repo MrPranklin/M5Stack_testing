@@ -10,6 +10,7 @@
 #include "Heater.hpp"
 #include "MockHeater.hpp"
 #include "HeatControl.hpp"
+#include "mqtt_topics.h"
 
 void setupWifi();
 
@@ -33,13 +34,13 @@ void setup() {
     Cooler *c = new FanController(12);
     Heater *h = new MockHeater(13);
 
-    std::vector<Cooler*> coolers;
+    std::vector<Cooler *> coolers;
     coolers.push_back(c);
 
-    std::vector<Heater*> heaters;
+    std::vector<Heater *> heaters;
     heaters.push_back(h);
 
-    heatControl = new HeatControl (&coolers, &heaters);
+    heatControl = new HeatControl(&coolers, &heaters);
 
     Serial.println("Setup finished");
 }
@@ -55,27 +56,27 @@ void loop() {
 
 void callback(char *topic, byte *payload, unsigned int length) {
     payload[length] = '\0';
+    Serial.print("MQTT: received ");
+    Serial.print((char *) payload);
+    Serial.print(" on ");
+    Serial.println(topic);
     String strTopic = String((char *) topic);
     String pyld = String((char *) payload);
-    if (strTopic == "NOVA/cooling_in") {
+    if (strTopic == mqtt_command_cooling) {
         if (pyld == "ON") {
-            Serial.println("cooling ON");
 //            heatControl->turnOnAllCoolers();
-//            mqtt::send_data(mqttClient, "NOVA/cooling_out", "ON");
+            mqtt::confirmCoolingOn(mqttClient);
         } else {
-            Serial.println("cooling OFF");
 //            heatControl->turnOffAllCoolers();
-//            mqtt::send_data(mqttClient, "NOVA/cooling_out", "OFF");
+            mqtt::confirmCoolingOff(mqttClient);
         }
-    } else if(strTopic == "NOVA/heating_in"){
+    } else if (strTopic == mqtt_command_heating) {
         if (pyld == "ON") {
-            Serial.println("heating ON");
 //            heatControl->turnOnAllHeaters();
-//            mqtt::send_data(mqttClient, "NOVA/heating_out", "ON");
+            mqtt::confirmHeatingOn(mqttClient);
         } else {
-            Serial.println("heating OFF");
 //            heatControl->turnOffAllHeaters();
-//            mqtt::send_data(mqttClient, "NOVA/heating_out", "OFF");
+            mqtt::confirmHeatingOff(mqttClient);
         }
     }
 }

@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <cstdlib>
+#include "mqtt_topics.h"
 
 const char *mqtt_out_topic = "NOVA/out";
 const char *mqtt_client_id = "nova_cooling_heating";
@@ -9,6 +10,7 @@ const char *mqtt_client_id = "nova_cooling_heating";
 namespace mqtt {
     void send_data(PubSubClient client, const char *topic, const char *payload) {
         client.publish(topic, payload);
+        Serial.print("MQTT: published "); Serial.print(payload); Serial.print(" to "); Serial.println(topic);
     }
 
     void reconnect(PubSubClient client) {
@@ -21,13 +23,13 @@ namespace mqtt {
                 // Once connected, publish an announcement...
                 client.publish(mqtt_out_topic, "This is Nova_cooling_heating");
                 // ... and resubscribe
-                client.subscribe("NOVA/cooling_in");
-                client.subscribe("NOVA/heating_in");
+                client.subscribe(mqtt_command_heating);
+                client.subscribe(mqtt_command_cooling);
 
                 Serial.println("Subscribed to ");
 
-                Serial.println("NOVA/cooling_in");
-                Serial.println("NOVA/heating_in");
+                Serial.print("    "); Serial.println(mqtt_command_cooling);
+                Serial.print("    "); Serial.println(mqtt_command_heating);
             } else {
                 Serial.print("failed, rc=");
                 Serial.print(client.state());
@@ -36,5 +38,21 @@ namespace mqtt {
                 delay(5000);
             }
         }
+    }
+
+    void confirmCoolingOn(PubSubClient client){
+        send_data(client, mqtt_state_cooling, "ON");
+    }
+
+    void confirmCoolingOff(PubSubClient client){
+        send_data(client, mqtt_state_cooling, "OFF");
+    }
+
+    void confirmHeatingOn(PubSubClient client){
+        send_data(client, mqtt_state_heating, "ON");
+    }
+
+    void confirmHeatingOff(PubSubClient client){
+        send_data(client, mqtt_state_heating, "OFF");
     }
 }
