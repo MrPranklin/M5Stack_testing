@@ -1,102 +1,89 @@
 #include "HeatControl.hpp"
 #include "DHT22_C.hpp"
+#include "mqtt.hpp"
 
-HeatControl::HeatControl(DHT22_C *tempSensor, std::vector<Cooler *> *coolers, std::vector<Heater *> *heaters){
-  this->_tempSensor = tempSensor;
-  this->_coolers = coolers;
-  this->_heaters = heaters;
-  this->_isEnabled = false;
-  this->_targetTemp = 0;
-  this->_currentTemp = 0;
-}
-
-HeatControl::~HeatControl() {
-  delete _coolers;
-  _coolers = nullptr;
-
-  delete _heaters;
-  _heaters = nullptr;
+HeatControl::HeatControl(TempSensor *tempSensor, PubSubClient client) {
+    this->_tempSensor = tempSensor;
+    this->_client = client;
+    this->_isEnabled = false;
+    this->_isHeatingOn = false;
+    this->_isCoolingOn = false;
+    this->_targetTemp = 0;
+    this->_currentTemp = 0;
 }
 
 void HeatControl::turnEverythingOff() {
-  disable();
-
-  turnOffAllHeaters();
-  turnOffAllCoolers();
+    turnOffHeating();
+    turnOffCooling();
 }
 
 float HeatControl::getCurrentTemp() {
-  return _tempSensor->readTemperature();
+    return _tempSensor->readTemperature();
 }
 
 void HeatControl::setTargetTemp(float temp) {
-  this->_targetTemp = temp;
+    this->_targetTemp = temp;
 }
 
-void HeatControl::turnOnCooler(Cooler *c) {
-  c->turnOn();
+void HeatControl::turnOnCooling() {
+    turnOffHeating();
+    if (!this->_isCoolingOn) {
+        Serial.println("HeatControl: cooling ON");
+        this->_isCoolingOn = true;
+        mqtt::sendTurnOnCooling(this->_client);
+    }
 }
 
-void HeatControl::turnOffCooler(Cooler *c) {
-  c->turnOff();
+void HeatControl::turnOffCooling() {
+    if (this->_isCoolingOn) {
+        Serial.println("HeatControl: cooling OFF");
+        this->_isCoolingOn = false;
+        mqtt::sendTurnOffCooling(this->_client);
+    }
 }
 
-void HeatControl::turnOnAllCoolers() {
-  for (int i = 0; i < _coolers->size(); i++) {
-    turnOnCooler(this->_coolers->at(i));
-  }
+void HeatControl::turnOnHeating() {
+    turnOffCooling();
+    if (!this->_isHeatingOn) {
+        Serial.println("HeatControl: heating ON");
+        this->_isHeatingOn = true;
+        mqtt::sendTurnOnHeating(this->_client);
+    }
 }
 
-void HeatControl::turnOffAllCoolers() {
-  for (int i = 0; i < _coolers->size(); i++) {
-    turnOffCooler(this->_coolers->at(i));
-  }
-}
-
-void HeatControl::turnOnHeater(Heater *h) {
-  h->turnOn();
-}
-
-void HeatControl::turnOffHeater(Heater *h) {
-  h->turnOff();
-}
-
-void HeatControl::turnOnAllHeaters() {
-  for (int i = 0; i < _heaters->size(); i++) {
-    turnOnHeater(this->_heaters->at(i));
-  }
-}
-
-void HeatControl::turnOffAllHeaters() {
-  for (int i = 0; i < _heaters->size(); i++) {
-    turnOffHeater(this->_heaters->at(i));
-  }
+void HeatControl::turnOffHeating() {
+    if (this->_isHeatingOn) {
+        Serial.println("HeatControl: heating OFF");
+        this->_isHeatingOn = false;
+        mqtt::sendTurnOffHeating(this->_client);
+    }
 }
 
 void HeatControl::enable() {
-  this->_isEnabled = true;
+    this->_isEnabled = true;
 }
 
 void HeatControl::disable() {
-  this->_isEnabled = false;
+    this->_isEnabled = false;
+    turnEverythingOff();
 }
 
 bool HeatControl::isEnabled() {
-  return _isEnabled;
+    return _isEnabled;
 }
 
 bool HeatControl::update() {
-  if (isEnabled()) {
-
+    bool isEnabled_ = isEnabled();
     _currentTemp = getCurrentTemp();
 
-    if (_currentTemp > _targetTemp) {
-
-    } else if (_currentTemp < _targetTemp) {
-
-    } else {
-      turnEverythingOff();
+    if (isEnabled_) {
+        if (_currentTemp - _targetTemp >= 1) {
+            turnOnCooling();
+        } else if (_currentTemp - _targetTemp <= -1) {
+            turnOnHeating();
+        } else {
+            turnEverythingOff();
+        }
     }
-  }
-  return isEnabled();
+    return isEnabled_;
 }

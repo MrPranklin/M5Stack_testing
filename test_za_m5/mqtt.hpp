@@ -15,6 +15,14 @@ namespace mqtt {
     void callback(char *topic, byte *payload, unsigned int length);
 
     bool shouldUpdate(long millis, long lastMillis);
+
+    void sendTurnOnCooling(PubSubClient client);
+
+    void sendTurnOffCooling(PubSubClient client);
+
+    void sendTurnOnHeating(PubSubClient client);
+
+    void sendTurnOffHeating(PubSubClient client);
 };  // namespace mqtt
 
 #endif

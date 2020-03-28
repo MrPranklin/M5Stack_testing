@@ -9,6 +9,7 @@
 #include "m5lcd.hpp"
 #include "mqtt.hpp"
 #include "ota.hpp"
+#include "HeatControl.hpp"
 
 #define DHTPIN 26
 
@@ -31,6 +32,8 @@ DHT22_C dht22(DHTPIN);
 WiFiClient wifi_client;
 PubSubClient mqtt_client(wifi_client);
 
+HeatControl *heatControl;
+
 float temp = 0.0;
 float hum = 0.0;
 
@@ -39,6 +42,10 @@ void setup() {
     M5.begin();
     M5.Power.begin();
     M5.Power.setPowerBoostKeepOn(false); // dont always output power
+
+    heatControl = new HeatControl(&dht22, mqtt_client);
+    heatControl->setTargetTemp(22);
+    heatControl->enable();
 
     m5lcd::begin();
 
@@ -65,7 +72,7 @@ void setup() {
 void loop() {
     ota::handle_client();
 
-//    heatControl->update();
+    heatControl->update();
 
     if (!mqtt_client.loop()) {
         Serial.println("MQTT disconnected");
@@ -95,8 +102,10 @@ void update_values(state_n::StateEnum state) {
     }
 
     if (mqtt::shouldUpdate(millis(), mqttLastMillis)) {
+
         mqtt::publish_temperature(mqtt_client, temp);
         mqtt::publish_humidity(mqtt_client, hum);
+
         mqttLastMillis = millis();
     }
 }

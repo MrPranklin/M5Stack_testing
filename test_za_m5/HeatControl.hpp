@@ -1,6 +1,8 @@
 #ifndef HEAT_CONTROL_H
 #define HEAT_CONTROL_H
 
+#include <PubSubClient.h>
+
 #include "TempSensor.hpp"
 #include "Cooler.hpp"
 #include "Heater.hpp"
@@ -9,7 +11,7 @@
 
 class HeatControl {
 public:
-    HeatControl(DHT22_C *tempSensor, std::vector<Cooler *> *coolers, std::vector<Heater *> *heaters);
+    HeatControl(TempSensor *tempSensor, PubSubClient client);
 
     ~HeatControl();
 
@@ -26,30 +28,25 @@ public:
     virtual bool isEnabled();
 
 protected:
-    virtual void turnOnHeater(Heater *h);
 
-    virtual void turnOffHeater(Heater *h);
+    virtual void turnOnHeating();
 
-    virtual void turnOnAllHeaters();
+    virtual void turnOffHeating();
 
-    virtual void turnOffAllHeaters();
+    virtual void turnOnCooling();
 
-    virtual void turnOnCooler(Cooler *c);
-
-    virtual void turnOffCooler(Cooler *c);
-
-    virtual void turnOnAllCoolers();
-
-    virtual void turnOffAllCoolers();
+    virtual void turnOffCooling();
 
     virtual float getCurrentTemp();
 
-    std::vector<Cooler *> *_coolers;
-    std::vector<Heater *> *_heaters;
     TempSensor *_tempSensor;
+    PubSubClient _client;
     bool _isEnabled;
     float _targetTemp;
     float _currentTemp;
+
+    bool _isCoolingOn;
+    bool _isHeatingOn;
 };
 
 #endif //HEAT_CONTROL_H
