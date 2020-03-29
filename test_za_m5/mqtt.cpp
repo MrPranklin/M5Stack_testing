@@ -10,8 +10,8 @@ const char *mqtt_out_topic_temp = "M5/temp";
 const char *mqtt_out_topic_hum = "M5/hum";
 const char *mqtt_client_id = "M5Stack_client";
 
-const char *mqtt_command_cooling = "M5/cooling";
-const char *mqtt_command_heating = "M5/heating";
+const char *mqtt_command_cooling = "M5/command/cooling";
+const char *mqtt_command_heating = "M5/command/heating";
 
 
 #define INTERVAL 10000
