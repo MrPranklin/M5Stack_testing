@@ -7,7 +7,7 @@
 
 class HeatControl {
 public:
-    HeatControl(std::vector<Cooler *> *coolers, std::vector<Heater *> *heaters);
+    HeatControl(std::vector<Cooler *> coolers, std::vector<Heater *> heaters);
 
     ~HeatControl();
 
@@ -37,8 +37,8 @@ protected:
     virtual void turnOffCooler(Cooler *c);
 
 
-    std::vector<Cooler *> *_coolers;
-    std::vector<Heater *> *_heaters;
+    std::vector<Cooler *> _coolers;
+    std::vector<Heater *> _heaters;
 
     bool _isEnabled;
 };

@@ -40,7 +40,8 @@ void setup() {
     std::vector<Heater *> heaters;
     heaters.push_back(h);
 
-    heatControl = new HeatControl(&coolers, &heaters);
+    heatControl = new HeatControl(coolers, heaters);
+    heatControl->enable();
 
     Serial.println("Setup finished");
 }
@@ -64,18 +65,18 @@ void callback(char *topic, byte *payload, unsigned int length) {
     String pyld = String((char *) payload);
     if (strTopic == mqtt_command_cooling) {
         if (pyld == "ON") {
-//            heatControl->turnOnAllCoolers();
+            heatControl->turnOnAllCoolers();
             mqtt::confirmCoolingOn(mqttClient);
         } else {
-//            heatControl->turnOffAllCoolers();
+            heatControl->turnOffAllCoolers();
             mqtt::confirmCoolingOff(mqttClient);
         }
     } else if (strTopic == mqtt_command_heating) {
         if (pyld == "ON") {
-//            heatControl->turnOnAllHeaters();
+            heatControl->turnOnAllHeaters();
             mqtt::confirmHeatingOn(mqttClient);
         } else {
-//            heatControl->turnOffAllHeaters();
+            heatControl->turnOffAllHeaters();
             mqtt::confirmHeatingOff(mqttClient);
         }
     }
