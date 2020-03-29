@@ -72,18 +72,20 @@ void setup() {
 void loop() {
     ota::handle_client();
 
-    heatControl->update();
-
     if (!mqtt_client.loop()) {
         Serial.println("MQTT disconnected");
         mqtt::reconnect(mqtt_client);
+    } else {
+        heatControl->update();
+
+        check_buttons();
+
+        if (m5lcd::is_display_on()) {
+            update_values(state);
+        }
     }
 
-    check_buttons();
 
-    if (m5lcd::is_display_on()) {
-        update_values(state);
-    }
 }
 
 void update_values(state_n::StateEnum state) {
