@@ -30,43 +30,59 @@ float HeatControl::getTargetTemp() {
 }
 
 float HeatControl::incrementTargetTemp(float amount) {
-    this->_targetTemp += amount;
-    return this->_targetTemp;
+    setTargetTemp(getTargetTemp() + amount);
+    return getTargetTemp();
 }
 
 
 void HeatControl::turnOnCooling() {
     turnOffHeating();
-    if (!this->_isCoolingOn) {
+    if (!getCoolingStatus()) {
         Serial.println("HeatControl: cooling ON");
-        this->_isCoolingOn = true;
+        setCoolingStatus(true);
         mqtt::sendTurnOnCooling(this->_client);
     }
 }
 
 void HeatControl::turnOffCooling() {
-    if (this->_isCoolingOn) {
+    if (getCoolingStatus()) {
         Serial.println("HeatControl: cooling OFF");
-        this->_isCoolingOn = false;
+        setCoolingStatus(false);
         mqtt::sendTurnOffCooling(this->_client);
     }
 }
 
+bool HeatControl::getCoolingStatus() {
+    return this->_isCoolingOn;
+}
+
+void HeatControl::setCoolingStatus(bool isCoolingOn) {
+    this->_isCoolingOn = isCoolingOn;
+}
+
 void HeatControl::turnOnHeating() {
     turnOffCooling();
-    if (!this->_isHeatingOn) {
+    if (!getHeatingStatus()) {
         Serial.println("HeatControl: heating ON");
-        this->_isHeatingOn = true;
+        setHeatingStatus(true);
         mqtt::sendTurnOnHeating(this->_client);
     }
 }
 
 void HeatControl::turnOffHeating() {
-    if (this->_isHeatingOn) {
+    if (getHeatingStatus()) {
         Serial.println("HeatControl: heating OFF");
-        this->_isHeatingOn = false;
+        setHeatingStatus(false)
         mqtt::sendTurnOffHeating(this->_client);
     }
+}
+
+bool HeatControl::getHeatingStatus() {
+    return this->_isHeatingOn;
+}
+
+void HeatControl::setHeatingStatus(bool isHeatingOn) {
+    this->_isHeatingOn = isHeatingOn;
 }
 
 void HeatControl::enable() {

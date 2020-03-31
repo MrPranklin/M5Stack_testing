@@ -31,7 +31,15 @@ public:
 
     virtual float incrementTargetTemp(float amount);
 
+    virtual bool getCoolingStatus();
+
+    virtual bool getHeatingStatus();
+
 protected:
+
+    virtual bool setCoolingStatus(bool isCoolingOn);
+
+    virtual bool setHeatingStatus(bool isHeatingOn);
 
     virtual void turnOnHeating();
 

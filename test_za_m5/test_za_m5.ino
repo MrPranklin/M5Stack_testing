@@ -63,7 +63,8 @@ void setup() {
 
     m5lcd::clear();
 
-    m5lcd::update_display(state, temp, hum, heatControl->getTargetTemp());
+    m5lcd::update_display(state, temp, hum, heatControl->getTargetTemp(), heatControl->getHeatingStatus(),
+                          heatControl->getCoolingStatus());
 
     Serial.println("Setup finished");
     m5lcd::showMessage("Setup done");
@@ -85,7 +86,8 @@ void loop() {
         check_buttons();
 
         if (m5lcd::is_display_on()) {
-            m5lcd::update_display(state, temp, hum, heatControl->getTargetTemp());
+            m5lcd::update_display(state, temp, hum, heatControl->getTargetTemp(), heatControl->getHeatingStatus(),
+                                  heatControl->getCoolingStatus());
         }
 
         if (mqtt::shouldUpdate(millis(), mqttLastMillis)) {
@@ -107,7 +109,8 @@ void set_state(state_n::StateEnum new_state) {
     Serial.print("State set to: ");
     Serial.println(state);
 
-    m5lcd::update_display(state, temp, hum, heatControl->getTargetTemp());
+    m5lcd::update_display(state, temp, hum, heatControl->getTargetTemp(), heatControl->getHeatingStatus(),
+                          heatControl->getCoolingStatus());
 
     return;
 }
