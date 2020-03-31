@@ -25,6 +25,7 @@ const IPAddress mqtt_server = IPAddress(192, 168, 0, 104);
 const int mqtt_port = 1883;
 
 state_n::StateEnum state = state_n::temperature;
+state_n::StateEnum oldState = state_n::temperature;
 
 long mqttLastMillis = 0;
 
@@ -62,7 +63,7 @@ void setup() {
 
     m5lcd::clear();
 
-    m5lcd::update_display(state, temp, hum);
+    m5lcd::update_display(state, temp, hum, heatControl->getTargetTemp());
 
     Serial.println("Setup finished");
     m5lcd::showMessage("Setup done");
@@ -76,47 +77,38 @@ void loop() {
         Serial.println("MQTT disconnected");
         mqtt::reconnect(mqtt_client);
     } else {
+        temp = dht22.readTemperature();
+        hum = dht22.readHumidity();
+
         heatControl->update();
 
         check_buttons();
 
         if (m5lcd::is_display_on()) {
-            update_values(state);
+            m5lcd::update_display(state, temp, hum, heatControl->getTargetTemp());
         }
-    }
 
+        if (mqtt::shouldUpdate(millis(), mqttLastMillis)) {
 
-}
+            mqtt::publish_temperature(mqtt_client, temp);
+            mqtt::publish_humidity(mqtt_client, hum);
 
-void update_values(state_n::StateEnum state) {
-    temp = dht22.readTemperature();
-    hum = dht22.readHumidity();
-
-    switch (state) {
-        case state_n::temperature: {
-            m5lcd::update_display(state, temp, hum);
-            break;
+            mqttLastMillis = millis();
         }
-        case state_n::humidity: {
-            m5lcd::update_display(state, temp, hum);
-            break;
-        }
-    }
-
-    if (mqtt::shouldUpdate(millis(), mqttLastMillis)) {
-
-        mqtt::publish_temperature(mqtt_client, temp);
-        mqtt::publish_humidity(mqtt_client, hum);
-
-        mqttLastMillis = millis();
     }
 }
 
 void set_state(state_n::StateEnum new_state) {
+    m5lcd::set_display_state(true);
+    m5lcd::clear();
+
     state = new_state;
+
     Serial.print("State set to: ");
     Serial.println(state);
-    m5lcd::update_display(state, temp, hum);
+
+    m5lcd::update_display(state, temp, hum, heatControl->getTargetTemp());
+
     return;
 }
 
@@ -124,13 +116,24 @@ void check_buttons() {
     M5.update(); // reads button state
 
     if (M5.BtnA.wasPressed()) {
-        m5lcd::set_display_state(true);
-        set_state(state_n::temperature);
+        if (state == state_n::setTargetTemperature) {
+            heatControl->incrementTargetTemp(0.5);
+        } else {
+            set_state(state_n::temperature);
+        }
     } else if (M5.BtnB.wasPressed()) {
-        m5lcd::set_display_state(true);
-        set_state(state_n::humidity);
+        if (state == state_n::setTargetTemperature) {
+            heatControl->incrementTargetTemp(-0.5);
+        } else {
+            set_state(state_n::humidity);
+        }
     } else if (M5.BtnC.wasPressed()) {
-        m5lcd::toggle_display();
+        if (state == state_n::setTargetTemperature) {
+            set_state(oldState);
+        } else {
+            oldState = state;
+            set_state(state_n::setTargetTemperature);
+        }
     }
 
     return;

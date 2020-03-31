@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include "mqtt_topics.h"
 
-const char *mqtt_out_topic = "NOVA/out";
+const char *mqtt_status_topic = "NOVA/status";
 const char *mqtt_client_id = "nova_cooling_heating";
 
 namespace mqtt {
@@ -29,7 +29,7 @@ namespace mqtt {
                 Serial.print("connected as ");
                 Serial.println(mqtt_client_id);
                 // Once connected, publish an announcement...
-                client.publish(mqtt_out_topic, "This is Nova_cooling_heating");
+                client.publish(mqtt_status_topic, "This is Nova_cooling_heating");
                 // ... and resubscribe
                 client.subscribe(mqtt_command_heating);
                 client.subscribe(mqtt_command_cooling);

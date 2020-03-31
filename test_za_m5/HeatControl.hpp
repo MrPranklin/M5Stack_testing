@@ -27,6 +27,10 @@ public:
 
     virtual bool isEnabled();
 
+    virtual float getTargetTemp();
+
+    virtual float incrementTargetTemp(float amount);
+
 protected:
 
     virtual void turnOnHeating();

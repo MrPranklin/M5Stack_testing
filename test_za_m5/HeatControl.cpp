@@ -25,6 +25,16 @@ void HeatControl::setTargetTemp(float temp) {
     this->_targetTemp = temp;
 }
 
+float HeatControl::getTargetTemp() {
+    return this->_targetTemp;
+}
+
+float HeatControl::incrementTargetTemp(float amount) {
+    this->_targetTemp += amount;
+    return this->_targetTemp;
+}
+
+
 void HeatControl::turnOnCooling() {
     turnOffHeating();
     if (!this->_isCoolingOn) {
