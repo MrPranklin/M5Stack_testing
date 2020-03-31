@@ -4,37 +4,65 @@
 #define DEFAULT_BRIGHTNESS 50
 
 void update_battery_level(int level) {
+    if (level <= 100 && level > 75) {
+        M5.Lcd.setTextColor(TFT_GREEN, TFT_BLACK);
+    } else if (level <= 75 && level > 50) {
+        M5.Lcd.setTextColor(TFT_YELLOW, TFT_BLACK);
+    } else if (level <= 50 && level > 25) {
+        M5.Lcd.setTextColor(TFT_ORANGE, TFT_BLACK);
+    } else {
+        M5.Lcd.setTextColor(TFT_RED, TFT_BLACK);
+    }
+
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(0, 0);
-    M5.Lcd.setTextColor(GREEN, BLACK);
-    M5.Lcd.print(level);
-    M5.Lcd.print("% ");
+
+    M5.Lcd.printf("Battery: %d%%  ", level);
     return;
 }
 
 void showTemperature(float temp) {
-    M5.Lcd.setTextSize(5);
+    M5.Lcd.setTextSize(3);
+    M5.Lcd.setCursor(30, 50);
+    M5.Lcd.setTextColor(TFT_GREEN, TFT_BLACK);
+    M5.Lcd.print("Temperature:");
 
-    M5.Lcd.setCursor(100, 100);
-    M5.Lcd.setTextColor(GREEN, BLACK);
-    M5.Lcd.print(temp);
+    M5.Lcd.setTextSize(5);
+    M5.Lcd.setCursor(70, 100);
+    M5.Lcd.setTextColor(TFT_GREEN, TFT_BLACK);
+    M5.Lcd.printf("%.2f`C  ", temp);
+}
+
+void showTargetTemperature(float temp) {
+    M5.Lcd.setTextSize(3);
+    M5.Lcd.setCursor(30, 50);
+    M5.Lcd.setTextColor(TFT_YELLOW, TFT_BLACK);
+    M5.Lcd.print("Set target temp:");
+
+    M5.Lcd.setTextSize(5);
+    M5.Lcd.setCursor(70, 100);
+    M5.Lcd.setTextColor(TFT_YELLOW, TFT_BLACK);
+    M5.Lcd.printf("%.2f`C  ", temp);
 }
 
 void showHumidity(float hum) {
-    M5.Lcd.setTextSize(5);
+    M5.Lcd.setTextSize(3);
+    M5.Lcd.setCursor(30, 50);
+    M5.Lcd.setTextColor(TFT_CYAN, TFT_BLACK);
+    M5.Lcd.print("Humidity:");
 
-    M5.Lcd.setCursor(100, 100);
-    M5.Lcd.setTextColor(RED, BLACK);
-    M5.Lcd.print(hum);
+    M5.Lcd.setTextSize(5);
+    M5.Lcd.setCursor(70, 100);
+    M5.Lcd.setTextColor(TFT_CYAN, BLACK);
+    M5.Lcd.printf("%.2f%%  ", hum);
 }
 
 namespace m5lcd {
     bool is_on = true;
 
     void begin() {
-        M5.Lcd.fillScreen(BLACK);
+        M5.Lcd.fillScreen(TFT_BLACK);
         M5.Lcd.setBrightness(DEFAULT_BRIGHTNESS);
-        M5.Lcd.setTextDatum(CC_DATUM);
     }
 
     void toggle_display() {
@@ -61,20 +89,10 @@ namespace m5lcd {
 
         switch (state) {
             case state_n::temperature:
-                M5.Lcd.setTextSize(3);
-                M5.Lcd.setCursor(30, 50);
-                M5.Lcd.setTextColor(GREEN, BLACK);
-                M5.Lcd.print("Temperature:");
-
                 showTemperature(temp);
                 break;
 
             case state_n::humidity:
-                M5.Lcd.setTextSize(3);
-                M5.Lcd.setCursor(30, 50);
-                M5.Lcd.setTextColor(RED, BLACK);
-                M5.Lcd.print("Humidity:");
-
                 showHumidity(hum);
                 break;
 
@@ -100,18 +118,8 @@ namespace m5lcd {
         clear();
 
         M5.Lcd.setTextSize(3);
-        M5.Lcd.setCursor(50, 100);
+        M5.Lcd.setCursor(20, 100);
         M5.Lcd.setTextColor(RED, BLACK);
         M5.Lcd.print(message);
-    }
-
-    void showTargetTemperature(float currentTargetTemp) {
-
-        M5.Lcd.setTextSize(3);
-        M5.Lcd.setCursor(30, 50);
-        M5.Lcd.setTextColor(YELLOW, BLACK);
-        M5.Lcd.print("Set target temp:");
-
-        showTemperature(currentTargetTemp);
     }
 }  // namespace m5lcd

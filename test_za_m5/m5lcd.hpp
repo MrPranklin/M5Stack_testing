@@ -19,8 +19,6 @@ namespace m5lcd {
     bool is_display_on();
 
     void showMessage(const char *message);
-
-    void showTargetTemperature(float currentTargetTemp);
 }  // namespace m5lcd
 
 #endif
