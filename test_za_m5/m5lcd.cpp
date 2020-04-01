@@ -21,7 +21,7 @@ void update_battery_level(int level) {
     return;
 }
 
-void showTemperature(float temp, bool isHeatingOn, bool isCoolingOn) {
+void showTemperature(float temp, bool isHeatControlEnabled, bool isHeatingOn, bool isCoolingOn) {
     M5.Lcd.setTextSize(3);
     M5.Lcd.setCursor(30, 50);
     M5.Lcd.setTextColor(TFT_GREEN, TFT_BLACK);
@@ -32,24 +32,33 @@ void showTemperature(float temp, bool isHeatingOn, bool isCoolingOn) {
     M5.Lcd.setTextColor(TFT_GREEN, TFT_BLACK);
     M5.Lcd.printf("%.2f`C  ", temp);
 
-    M5.Lcd.setTextSize(2);
-    M5.Lcd.setCursor(70, 160);
+    if (isHeatControlEnabled) {
 
-    M5.Lcd.setTextColor(TFT_ORANGE, TFT_BLACK);
+        M5.Lcd.setTextSize(2);
+        M5.Lcd.setCursor(70, 160);
 
-    if (isHeatingOn) {
-        M5.Lcd.print("Heating: ON");
+        M5.Lcd.setTextColor(TFT_ORANGE, TFT_BLACK);
+
+        if (isHeatingOn) {
+            M5.Lcd.print("Heating: ON ");
+        } else {
+            M5.Lcd.print("Heating: OFF");
+        }
+
+        M5.Lcd.setCursor(70, 190);
+        M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK);
+
+        if (isCoolingOn) {
+            M5.Lcd.print("Cooling: ON ");
+        } else {
+            M5.Lcd.print("Cooling: OFF");
+        }
     } else {
-        M5.Lcd.print("Heating: OFF");
-    }
+        M5.Lcd.setTextSize(2);
+        M5.Lcd.setCursor(40, 175);
+        M5.Lcd.setTextColor(TFT_RED, TFT_BLACK);
 
-    M5.Lcd.setCursor(70, 190);
-    M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK);
-
-    if (isCoolingOn) {
-        M5.Lcd.print("Cooling: ON");
-    } else {
-        M5.Lcd.print("Cooling: OFF");
+        M5.Lcd.print("Heat control disabled");
     }
 }
 
@@ -103,14 +112,19 @@ namespace m5lcd {
         }
     }
 
-    void update_display(state_n::StateEnum state, float temp, float hum, float targetTemp, bool isHeatingOn,
-                        bool isCoolingOn) {
-
+    void update_display(state_n::StateEnum state,
+                        float temp,
+                        float hum,
+                        float targetTemp,
+                        bool isHeatControlEnabled,
+                        bool isHeatingOn,
+                        bool isCoolingOn
+    ) {
         update_battery_level(M5.Power.getBatteryLevel());
 
         switch (state) {
             case state_n::temperature:
-                showTemperature(temp, isHeatingOn, isCoolingOn);
+                showTemperature(temp, isHeatControlEnabled, isHeatingOn, isCoolingOn);
                 break;
 
             case state_n::humidity:

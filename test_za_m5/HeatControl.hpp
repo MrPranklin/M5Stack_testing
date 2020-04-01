@@ -35,12 +35,11 @@ public:
 
     virtual bool getHeatingStatus();
 
+    virtual void setCoolingStatus(bool isCoolingOn);
+
+    virtual void setHeatingStatus(bool isHeatingOn);
+
 protected:
-
-    virtual bool setCoolingStatus(bool isCoolingOn);
-
-    virtual bool setHeatingStatus(bool isHeatingOn);
-
     virtual void turnOnHeating();
 
     virtual void turnOffHeating();

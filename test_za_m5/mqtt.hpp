@@ -12,8 +12,6 @@ namespace mqtt {
 
     void publish_humidity(PubSubClient client, float humidity);
 
-    void callback(char *topic, byte *payload, unsigned int length);
-
     bool shouldUpdate(long millis, long lastMillis);
 
     void sendTurnOnCooling(PubSubClient client);
@@ -23,6 +21,12 @@ namespace mqtt {
     void sendTurnOnHeating(PubSubClient client);
 
     void sendTurnOffHeating(PubSubClient client);
+
+    void confirmHeatControlOn(PubSubClient client);
+
+    void confirmHeatControlOff(PubSubClient client);
+
+    bool unsubscribe(PubSubClient client, const char *topic);
 };  // namespace mqtt
 
 #endif

@@ -72,7 +72,7 @@ void HeatControl::turnOnHeating() {
 void HeatControl::turnOffHeating() {
     if (getHeatingStatus()) {
         Serial.println("HeatControl: heating OFF");
-        setHeatingStatus(false)
+        setHeatingStatus(false);
         mqtt::sendTurnOffHeating(this->_client);
     }
 }
@@ -91,7 +91,6 @@ void HeatControl::enable() {
 
 void HeatControl::disable() {
     this->_isEnabled = false;
-    turnEverythingOff();
 }
 
 bool HeatControl::isEnabled() {
@@ -100,9 +99,10 @@ bool HeatControl::isEnabled() {
 
 bool HeatControl::update() {
     bool isEnabled_ = isEnabled();
-    _currentTemp = getCurrentTemp();
 
     if (isEnabled_) {
+        _currentTemp = getCurrentTemp();
+
         if (_currentTemp - _targetTemp >= 1) {
             turnOnCooling();
         } else if (_currentTemp - _targetTemp <= -1) {

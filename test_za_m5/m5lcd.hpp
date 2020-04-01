@@ -10,8 +10,14 @@ namespace m5lcd {
 
     void set_display_state(bool is_on);
 
-    void update_display(state_n::StateEnum state, float temp, float hum, float currentTargetTemp, bool isHeatingOn,
-                        bool isCoolingOn);
+    void update_display(state_n::StateEnum state,
+                        float temp,
+                        float hum,
+                        float currentTargetTemp,
+                        bool isHeatControlEnabled,
+                        bool isHeatingOn,
+                        bool isCoolingOn
+    );
 
     void show_setting_up();
 

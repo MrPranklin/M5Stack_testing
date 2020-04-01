@@ -10,6 +10,7 @@
 #include "mqtt.hpp"
 #include "ota.hpp"
 #include "HeatControl.hpp"
+#include "mqtt_topics.h"
 
 #define DHTPIN 26
 
@@ -46,7 +47,6 @@ void setup() {
 
     heatControl = new HeatControl(&dht22, mqtt_client);
     heatControl->setTargetTemp(22);
-    heatControl->enable();
 
     m5lcd::begin();
 
@@ -63,8 +63,15 @@ void setup() {
 
     m5lcd::clear();
 
-    m5lcd::update_display(state, temp, hum, heatControl->getTargetTemp(), heatControl->getHeatingStatus(),
-                          heatControl->getCoolingStatus());
+    m5lcd::update_display(
+            state,
+            temp,
+            hum,
+            heatControl->getTargetTemp(),
+            heatControl->isEnabled(),
+            heatControl->getHeatingStatus(),
+            heatControl->getCoolingStatus()
+    );
 
     Serial.println("Setup finished");
     m5lcd::showMessage("Setup done");
@@ -86,8 +93,15 @@ void loop() {
         check_buttons();
 
         if (m5lcd::is_display_on()) {
-            m5lcd::update_display(state, temp, hum, heatControl->getTargetTemp(), heatControl->getHeatingStatus(),
-                                  heatControl->getCoolingStatus());
+            m5lcd::update_display(
+                    state,
+                    temp,
+                    hum,
+                    heatControl->getTargetTemp(),
+                    heatControl->isEnabled(),
+                    heatControl->getHeatingStatus(),
+                    heatControl->getCoolingStatus()
+            );
         }
 
         if (mqtt::shouldUpdate(millis(), mqttLastMillis)) {
@@ -109,8 +123,15 @@ void set_state(state_n::StateEnum new_state) {
     Serial.print("State set to: ");
     Serial.println(state);
 
-    m5lcd::update_display(state, temp, hum, heatControl->getTargetTemp(), heatControl->getHeatingStatus(),
-                          heatControl->getCoolingStatus());
+    m5lcd::update_display(
+            state,
+            temp,
+            hum,
+            heatControl->getTargetTemp(),
+            heatControl->isEnabled(),
+            heatControl->getHeatingStatus(),
+            heatControl->getCoolingStatus()
+    );
 
     return;
 }
@@ -140,6 +161,45 @@ void check_buttons() {
     }
 
     return;
+}
+
+void mqtt_callback(char *topic, byte *payload, unsigned int length) {
+    payload[length] = '\0';
+
+    Serial.print("MQTT: received ");
+    Serial.print((char *) payload);
+    Serial.print(" on ");
+    Serial.println(topic);
+
+    String strTopic = String((char *) topic);
+    String pyld = String((char *) payload);
+
+    if (strTopic == mqtt_command_heat_control) {
+        if (pyld == "ON") {
+            heatControl->enable();
+            mqtt::confirmHeatControlOn(mqtt_client);
+
+            heatControl->update();
+
+            if (heatControl->getCoolingStatus()) {
+                mqtt::sendTurnOnCooling(mqtt_client);
+            } else {
+                mqtt::sendTurnOffCooling(mqtt_client);
+            }
+
+            if (heatControl->getHeatingStatus()) {
+                mqtt::sendTurnOnHeating(mqtt_client);
+            } else {
+                mqtt::sendTurnOffHeating(mqtt_client);
+            }
+
+            m5lcd::clear();
+        } else if (pyld == "OFF") {
+            heatControl->disable();
+            mqtt::confirmHeatControlOff(mqtt_client);
+            m5lcd::clear();
+        }
+    }
 }
 
 void setup_wifi() {
@@ -174,7 +234,7 @@ void setup_wifi() {
 
     Serial.println("Setting up MQTT");
     mqtt_client.setServer(mqtt_server, mqtt_port);
-    mqtt_client.setCallback(mqtt::callback);
+    mqtt_client.setCallback(mqtt_callback);
     mqtt::reconnect(mqtt_client);
     Serial.println("MQTT setup done");
 }
