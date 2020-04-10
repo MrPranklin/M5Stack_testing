@@ -29,8 +29,5 @@ void ServoBlindController::setPercentage(int percentage) {
     }
 
     int positionToWrite = (getPercentage() / 100.0) * this->_fullyOpenedPosition;
-    Serial.println(getPercentage());
-    Serial.println(positionToWrite);
-    Serial.println("---------");
     _servo->write(positionToWrite);
 }
