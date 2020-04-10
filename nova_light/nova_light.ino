@@ -6,8 +6,10 @@
 #include "ServoBlindController.hpp"
 #include "mqtt.hpp"
 #include "MqttTopics.h"
+#include "LedController.hpp"
 
 #define SERVO_PIN 4
+#define LED_PIN 12
 
 void setupWifi();
 
@@ -22,11 +24,13 @@ WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
 
 ServoBlindController *servo;
+LedController *led;
 
 void setup() {
     Serial.begin(115200);
 
     servo = new ServoBlindController(SERVO_PIN, 180);
+    led = new LedController(LED_PIN);
     setupWifi();
 }
 
@@ -55,7 +59,7 @@ void callback(char *topic, byte *payload, unsigned int length) {
     if (strTopic == mqtt_command_blinds) {
         servo->setPercentage(intValue);
     } else if (strTopic == mqtt_command_light) {
-
+        led->setPercentage(intValue);
     }
 }
 
