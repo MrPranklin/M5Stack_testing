@@ -45,6 +45,14 @@ namespace mqtt {
                     Serial.println(mqtt_command_heat_control);
                 }
 
+                if (client.subscribe(mqtt_command_target_temp)) {
+                    Serial.print("Subscribed to ");
+                    Serial.println(mqtt_command_target_temp);
+                } else {
+                    Serial.print("Failed to subscribe to ");
+                    Serial.println(mqtt_command_target_temp);
+                }
+
                 m5lcd::clear();
             } else {
                 Serial.print("failed, rc=");
@@ -97,6 +105,12 @@ namespace mqtt {
 
     void confirmHeatControlOff(PubSubClient client) {
         send_data(client, mqtt_state_heat_control, "OFF", true);
+    }
+
+    void updateTargetTemp(PubSubClient client, float temp) {
+        char buff[10];
+        sprintf(buff, "%f", temp);
+        send_data(client, mqtt_state_target_temp, buff, true);
     }
 
     bool unsubscribe(PubSubClient client, const char *topic) {

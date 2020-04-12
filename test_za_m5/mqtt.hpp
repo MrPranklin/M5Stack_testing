@@ -26,6 +26,8 @@ namespace mqtt {
 
     void confirmHeatControlOff(PubSubClient client);
 
+    void updateTargetTemp(PubSubClient client, float temp);
+
     bool unsubscribe(PubSubClient client, const char *topic);
 };  // namespace mqtt
 

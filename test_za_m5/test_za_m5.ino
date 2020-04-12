@@ -141,13 +141,15 @@ void check_buttons() {
 
     if (M5.BtnA.wasPressed()) {
         if (state == state_n::setTargetTemperature) {
-            heatControl->incrementTargetTemp(0.5);
+            float curr = heatControl->incrementTargetTemp(0.5);
+            mqtt::updateTargetTemp(mqtt_client, curr);
         } else {
             set_state(state_n::temperature);
         }
     } else if (M5.BtnB.wasPressed()) {
         if (state == state_n::setTargetTemperature) {
-            heatControl->incrementTargetTemp(-0.5);
+            float curr = heatControl->incrementTargetTemp(-0.5);
+            mqtt::updateTargetTemp(mqtt_client, curr);
         } else {
             set_state(state_n::humidity);
         }
@@ -199,6 +201,9 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length) {
             mqtt::confirmHeatControlOff(mqtt_client);
             m5lcd::clear();
         }
+    } else if (strTopic == mqtt_command_target_temp) {
+
+        heatControl->setTargetTemp(atof((const char *) payload));
     }
 }
 
