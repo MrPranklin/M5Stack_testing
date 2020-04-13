@@ -2,6 +2,7 @@
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
 #include <PubSubClient.h>
+#include <sstream>
 
 #include "ota.hpp"
 #include "mqtt.hpp"
@@ -62,23 +63,17 @@ void callback(char *topic, byte *payload, unsigned int length) {
     Serial.print(" on ");
     Serial.println(topic);
     String strTopic = String((char *) topic);
-    String pyld = String((char *) payload);
+
+    std::stringstream strValue;
+    strValue << (char *) payload;
+
+    int intValue = 0;
+    strValue >> intValue;
+
     if (strTopic == mqtt_command_cooling) {
-        if (pyld == "ON") {
-            heatControl->turnOnAllCoolers();
-            mqtt::confirmCoolingOn(mqttClient);
-        } else {
-            heatControl->turnOffAllCoolers();
-            mqtt::confirmCoolingOff(mqttClient);
-        }
+        heatControl->setPercentageToAllCoolers(intValue);
     } else if (strTopic == mqtt_command_heating) {
-        if (pyld == "ON") {
-            heatControl->turnOnAllHeaters();
-            mqtt::confirmHeatingOn(mqttClient);
-        } else {
-            heatControl->turnOffAllHeaters();
-            mqtt::confirmHeatingOff(mqttClient);
-        }
+        heatControl->setPercentageToAllHeaters(intValue);
     }
 }
 

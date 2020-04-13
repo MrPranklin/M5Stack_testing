@@ -27,6 +27,10 @@ public:
 
     virtual void turnOffAllHeaters();
 
+    virtual void setPercentageToAllHeaters(int percentage);
+
+    virtual void setPercentageToAllCoolers(int percentage);
+
 protected:
     virtual void turnOnHeater(Heater *h);
 
@@ -36,6 +40,9 @@ protected:
 
     virtual void turnOffCooler(Cooler *c);
 
+    virtual void setPercentageToCooler(Cooler *c, int percentage);
+
+    virtual void setPercentageToHeater(Heater *h, int percentage);
 
     std::vector<Cooler *> _coolers;
     std::vector<Heater *> _heaters;

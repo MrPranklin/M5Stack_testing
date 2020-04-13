@@ -9,8 +9,13 @@ public:
 
     virtual bool isEnabled() = 0;
 
+    virtual void setPercentage(int percentage) = 0;
+
+    virtual int getPercentage() = 0;
+
 protected:
     bool _isEnabled{false};
+    int _currentPercentage{0};
 };
 
 #endif //HEATER_H

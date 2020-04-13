@@ -14,6 +14,10 @@ public:
 
     bool isEnabled() override;
 
+    void setPercentage(int percentage) override;
+
+    int getPercentage() override;
+
 private:
     int _pin;
 };

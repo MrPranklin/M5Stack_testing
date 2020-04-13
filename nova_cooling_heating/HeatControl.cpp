@@ -66,3 +66,23 @@ void HeatControl::disable() {
 bool HeatControl::isEnabled() {
     return _isEnabled;
 }
+
+void HeatControl::setPercentageToAllHeaters(int percentage) {
+    for (int i = 0; i < _heaters.size(); i++) {
+        setPercentageToHeater(this->_heaters.at(i), percentage);
+    }
+}
+
+void HeatControl::setPercentageToAllCoolers(int percentage) {
+    for (int i = 0; i < _coolers.size(); i++) {
+        setPercentageToCooler(this->_coolers.at(i), percentage);
+    }
+}
+
+void HeatControl::setPercentageToCooler(Cooler *c, int percentage) {
+    c->setPercentage(percentage);
+}
+
+void HeatControl::setPercentageToHeater(Heater *h, int percentage) {
+    h->setPercentage(percentage);
+}

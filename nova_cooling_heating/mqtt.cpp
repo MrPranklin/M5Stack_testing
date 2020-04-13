@@ -47,20 +47,4 @@ namespace mqtt {
             }
         }
     }
-
-    void confirmCoolingOn(PubSubClient client){
-        send_data(client, mqtt_state_cooling, "ON", true);
-    }
-
-    void confirmCoolingOff(PubSubClient client){
-        send_data(client, mqtt_state_cooling, "OFF", true);
-    }
-
-    void confirmHeatingOn(PubSubClient client){
-        send_data(client, mqtt_state_heating, "ON", true);
-    }
-
-    void confirmHeatingOff(PubSubClient client){
-        send_data(client, mqtt_state_heating, "OFF", true);
-    }
 }

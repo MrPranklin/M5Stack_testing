@@ -7,15 +7,32 @@ FanController::FanController(int pin) {
 }
 
 void FanController::turnOn() {
+    int valueToWrite = map(getPercentage(), 0, 100, 0, 255);
+    analogWrite(this->_pin, valueToWrite);
     this->_isEnabled = true;
-    digitalWrite(this->_pin, HIGH);
 }
 
 void FanController::turnOff() {
     this->_isEnabled = false;
-    digitalWrite(this->_pin, LOW);
+    analogWrite(this->_pin, 0);
 }
 
 bool FanController::isEnabled() {
     return this->_isEnabled;
+}
+
+void FanController::setPercentage(int percentage) {
+    if (percentage < 0) {
+        this->_currentPercentage = 0;
+    } else if (percentage > 100) {
+        this->_currentPercentage = 100;
+    } else {
+        this->_currentPercentage = percentage;
+    }
+
+    turnOn();
+}
+
+int FanController::getPercentage() {
+    return this->_currentPercentage;
 }

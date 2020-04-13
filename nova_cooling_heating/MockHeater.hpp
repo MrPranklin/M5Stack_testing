@@ -5,13 +5,17 @@
 
 class MockHeater : public Heater {
 public:
-    MockHeater(int pin);
+    explicit MockHeater(int pin);
 
-    void turnOn();
+    void turnOn() override ;
 
-    void turnOff();
+    void turnOff() override ;
 
-    bool isEnabled();
+    bool isEnabled() override ;
+
+    void setPercentage(int percentage) override ;
+
+    int getPercentage() override ;
 
 private:
     int _pin;
