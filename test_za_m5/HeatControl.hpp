@@ -23,41 +23,31 @@ public:
 
     virtual void disable();
 
-    virtual void turnEverythingOff();
-
     virtual bool isEnabled();
 
     virtual float getTargetTemp();
 
     virtual float incrementTargetTemp(float amount);
 
-    virtual bool getCoolingStatus();
+    virtual int getCoolingPercentage();
 
-    virtual bool getHeatingStatus();
+    virtual int getHeatingPercentage();
 
-    virtual void setCoolingStatus(bool isCoolingOn);
+    virtual bool setCoolingPercentage(int percentage);
 
-    virtual void setHeatingStatus(bool isHeatingOn);
+    virtual bool setHeatingPercentage(int percentage);
 
 protected:
-    virtual void turnOnHeating();
-
-    virtual void turnOffHeating();
-
-    virtual void turnOnCooling();
-
-    virtual void turnOffCooling();
-
     virtual float getCurrentTemp();
 
     TempSensor *_tempSensor;
     PubSubClient _client;
-    bool _isEnabled;
-    float _targetTemp;
-    float _currentTemp;
+    bool _isEnabled{false};
+    float _targetTemp{0};
+    float _currentTemp{0};
 
-    bool _isCoolingOn;
-    bool _isHeatingOn;
+    int _currentCoolingPercentage{0};
+    int _currentHeatingPercentage{0};
 };
 
 #endif //HEAT_CONTROL_H

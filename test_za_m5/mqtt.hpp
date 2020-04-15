@@ -14,19 +14,15 @@ namespace mqtt {
 
     bool shouldUpdate(long millis, long lastMillis);
 
-    void sendTurnOnCooling(PubSubClient client);
+    void updateCoolingPercentage(PubSubClient client, int percentage);
 
-    void sendTurnOffCooling(PubSubClient client);
+    void updateHeatingPercentage(PubSubClient client, int percentage);
 
-    void sendTurnOnHeating(PubSubClient client);
-
-    void sendTurnOffHeating(PubSubClient client);
+    void updateTargetTemp(PubSubClient client, float temp);
 
     void confirmHeatControlOn(PubSubClient client);
 
     void confirmHeatControlOff(PubSubClient client);
-
-    void updateTargetTemp(PubSubClient client, float temp);
 
     bool unsubscribe(PubSubClient client, const char *topic);
 };  // namespace mqtt

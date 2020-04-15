@@ -18,6 +18,8 @@ void callback(char *topic, byte *payload, unsigned int length);
 
 void setup_wifi();
 
+void check_buttons();
+
 const char *ssid = "Pranklin";
 const char *password = "MrPranklin";
 const char *host = "M5Stack";
@@ -69,8 +71,8 @@ void setup() {
             hum,
             heatControl->getTargetTemp(),
             heatControl->isEnabled(),
-            heatControl->getHeatingStatus(),
-            heatControl->getCoolingStatus()
+            heatControl->getHeatingPercentage(),
+            heatControl->getCoolingPercentage()
     );
 
     Serial.println("Setup finished");
@@ -88,7 +90,10 @@ void loop() {
         temp = dht22.readTemperature();
         hum = dht22.readHumidity();
 
-        heatControl->update();
+        if (heatControl->update()) {
+            mqtt::updateHeatingPercentage(mqtt_client, heatControl->getHeatingPercentage());
+            mqtt::updateCoolingPercentage(mqtt_client, heatControl->getCoolingPercentage());
+        }
 
         check_buttons();
 
@@ -99,12 +104,15 @@ void loop() {
                     hum,
                     heatControl->getTargetTemp(),
                     heatControl->isEnabled(),
-                    heatControl->getHeatingStatus(),
-                    heatControl->getCoolingStatus()
+                    heatControl->getHeatingPercentage(),
+                    heatControl->getCoolingPercentage()
             );
         }
 
         if (mqtt::shouldUpdate(millis(), mqttLastMillis)) {
+
+            mqtt::updateHeatingPercentage(mqtt_client, heatControl->getHeatingPercentage());
+            mqtt::updateCoolingPercentage(mqtt_client, heatControl->getCoolingPercentage());
 
             mqtt::publish_temperature(mqtt_client, temp);
             mqtt::publish_humidity(mqtt_client, hum);
@@ -129,11 +137,9 @@ void set_state(state_n::StateEnum new_state) {
             hum,
             heatControl->getTargetTemp(),
             heatControl->isEnabled(),
-            heatControl->getHeatingStatus(),
-            heatControl->getCoolingStatus()
+            heatControl->getHeatingPercentage(),
+            heatControl->getCoolingPercentage()
     );
-
-    return;
 }
 
 void check_buttons() {
@@ -161,8 +167,6 @@ void check_buttons() {
             set_state(state_n::setTargetTemperature);
         }
     }
-
-    return;
 }
 
 void mqtt_callback(char *topic, byte *payload, unsigned int length) {
@@ -183,18 +187,6 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length) {
 
             heatControl->update();
 
-            if (heatControl->getCoolingStatus()) {
-                mqtt::sendTurnOnCooling(mqtt_client);
-            } else {
-                mqtt::sendTurnOffCooling(mqtt_client);
-            }
-
-            if (heatControl->getHeatingStatus()) {
-                mqtt::sendTurnOnHeating(mqtt_client);
-            } else {
-                mqtt::sendTurnOffHeating(mqtt_client);
-            }
-
             m5lcd::clear();
         } else if (pyld == "OFF") {
             heatControl->disable();
@@ -202,7 +194,6 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length) {
             m5lcd::clear();
         }
     } else if (strTopic == mqtt_command_target_temp) {
-
         heatControl->setTargetTemp(atof((const char *) payload));
     }
 }
@@ -230,9 +221,7 @@ void setup_wifi() {
     m5lcd::showMessage("Setting mdns");
     if (!MDNS.begin(host)) {  //http://m5stack.local
         Serial.println("Error setting up MDNS responder!");
-        while (1) {
-            delay(1000);
-        }
+        ESP.restart();
     }
     Serial.println("mDNS responder started");
     m5lcd::clear();

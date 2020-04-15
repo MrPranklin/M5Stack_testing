@@ -15,8 +15,8 @@ namespace m5lcd {
                         float hum,
                         float currentTargetTemp,
                         bool isHeatControlEnabled,
-                        bool isHeatingOn,
-                        bool isCoolingOn
+                        int heatingPercentage,
+                        int coolingPercentage
     );
 
     void show_setting_up();

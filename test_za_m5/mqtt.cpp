@@ -1,7 +1,7 @@
-#include "mqtt.hpp"
-
 #include <Arduino.h>
-#include <stdlib.h>
+#include <cstdio>
+
+#include "mqtt.hpp"
 #include "m5lcd.hpp"
 #include "mqtt_topics.h"
 
@@ -77,26 +77,7 @@ namespace mqtt {
     }
 
     bool shouldUpdate(long millis, long lastMillis) {
-        if (millis - lastMillis > INTERVAL) {
-            return true;
-        }
-        return false;
-    }
-
-    void sendTurnOnCooling(PubSubClient client) {
-        send_data(client, mqtt_command_cooling, "ON", true);
-    }
-
-    void sendTurnOffCooling(PubSubClient client) {
-        send_data(client, mqtt_command_cooling, "OFF", true);
-    }
-
-    void sendTurnOnHeating(PubSubClient client) {
-        send_data(client, mqtt_command_heating, "ON", true);
-    }
-
-    void sendTurnOffHeating(PubSubClient client) {
-        send_data(client, mqtt_command_heating, "OFF", true);
+        return millis - lastMillis > INTERVAL;
     }
 
     void confirmHeatControlOn(PubSubClient client) {
@@ -105,6 +86,18 @@ namespace mqtt {
 
     void confirmHeatControlOff(PubSubClient client) {
         send_data(client, mqtt_state_heat_control, "OFF", true);
+    }
+
+    void updateCoolingPercentage(PubSubClient client, int percentage) {
+        char buff[10];
+        sprintf(buff, "%d", percentage);
+        send_data(client, mqtt_command_cooling, buff, true);
+    }
+
+    void updateHeatingPercentage(PubSubClient client, int percentage) {
+        char buff[10];
+        sprintf(buff, "%d", percentage);
+        send_data(client, mqtt_command_heating, buff, true);
     }
 
     void updateTargetTemp(PubSubClient client, float temp) {
@@ -117,10 +110,10 @@ namespace mqtt {
         bool result = client.unsubscribe(topic);
 
         if (result) {
-            Serial.print("Unsubscribed from: ");
+            Serial.print("MQTT: Unsubscribed from: ");
             Serial.println(topic);
         } else {
-            Serial.print("Failed to unsubscribe from: ");
+            Serial.print("MQTT: Failed to unsubscribe from: ");
             Serial.println(topic);
         }
 

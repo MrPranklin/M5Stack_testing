@@ -1,5 +1,7 @@
-#include "m5lcd.hpp"
 #include <M5Stack.h>
+#include <Arduino.h>
+
+#include "m5lcd.hpp"
 
 #define DEFAULT_BRIGHTNESS 50
 
@@ -18,10 +20,9 @@ void update_battery_level(int level) {
     M5.Lcd.setCursor(0, 0);
 
     M5.Lcd.printf("Battery: %d%%  ", level);
-    return;
 }
 
-void showTemperature(float temp, bool isHeatControlEnabled, bool isHeatingOn, bool isCoolingOn) {
+void showTemperature(float temp, bool isHeatControlEnabled, int heatingPercentage, int coolingPercentage) {
     M5.Lcd.setTextSize(3);
     M5.Lcd.setCursor(30, 50);
     M5.Lcd.setTextColor(TFT_GREEN, TFT_BLACK);
@@ -39,20 +40,14 @@ void showTemperature(float temp, bool isHeatControlEnabled, bool isHeatingOn, bo
 
         M5.Lcd.setTextColor(TFT_ORANGE, TFT_BLACK);
 
-        if (isHeatingOn) {
-            M5.Lcd.print("Heating: ON ");
-        } else {
-            M5.Lcd.print("Heating: OFF");
-        }
+
+        M5.Lcd.printf("Heating: %d%%  ", heatingPercentage);
 
         M5.Lcd.setCursor(70, 190);
         M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK);
 
-        if (isCoolingOn) {
-            M5.Lcd.print("Cooling: ON ");
-        } else {
-            M5.Lcd.print("Cooling: OFF");
-        }
+        M5.Lcd.printf("Cooling: %d%%  ", coolingPercentage);
+
     } else {
         M5.Lcd.setTextSize(2);
         M5.Lcd.setCursor(40, 175);
@@ -95,11 +90,7 @@ namespace m5lcd {
     }
 
     void toggle_display() {
-        if (is_on) {
-            set_display_state(false);
-        } else {
-            set_display_state(true);
-        }
+        set_display_state(!is_on);
     }
 
     void set_display_state(bool new_state) {
@@ -117,14 +108,14 @@ namespace m5lcd {
                         float hum,
                         float targetTemp,
                         bool isHeatControlEnabled,
-                        bool isHeatingOn,
-                        bool isCoolingOn
+                        int heatingPercentage,
+                        int coolingPercentage
     ) {
         update_battery_level(M5.Power.getBatteryLevel());
 
         switch (state) {
             case state_n::temperature:
-                showTemperature(temp, isHeatControlEnabled, isHeatingOn, isCoolingOn);
+                showTemperature(temp, isHeatControlEnabled, heatingPercentage, coolingPercentage);
                 break;
 
             case state_n::humidity:
@@ -134,7 +125,6 @@ namespace m5lcd {
             case state_n::setTargetTemperature:
                 showTargetTemperature(targetTemp);
         }
-        return;
     }
 
     void show_setting_up() {

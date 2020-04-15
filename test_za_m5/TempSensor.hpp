@@ -3,6 +3,8 @@
 
 class TempSensor {
 public:
+    virtual ~TempSensor() = default;
+
     virtual float readTemperature() = 0;
 };
 

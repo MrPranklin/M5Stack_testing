@@ -1,3 +1,6 @@
+#include <cmath>
+#include <Arduino.h>
+
 #include "HeatControl.hpp"
 #include "DHT22_C.hpp"
 #include "mqtt.hpp"
@@ -5,16 +8,10 @@
 HeatControl::HeatControl(TempSensor *tempSensor, PubSubClient client) {
     this->_tempSensor = tempSensor;
     this->_client = client;
-    this->_isEnabled = false;
-    this->_isHeatingOn = false;
-    this->_isCoolingOn = false;
-    this->_targetTemp = 0;
-    this->_currentTemp = 0;
 }
 
-void HeatControl::turnEverythingOff() {
-    turnOffHeating();
-    turnOffCooling();
+HeatControl::~HeatControl() {
+    delete _tempSensor;
 }
 
 float HeatControl::getCurrentTemp() {
@@ -34,57 +31,6 @@ float HeatControl::incrementTargetTemp(float amount) {
     return getTargetTemp();
 }
 
-
-void HeatControl::turnOnCooling() {
-    turnOffHeating();
-    if (!getCoolingStatus()) {
-        Serial.println("HeatControl: cooling ON");
-        setCoolingStatus(true);
-        mqtt::sendTurnOnCooling(this->_client);
-    }
-}
-
-void HeatControl::turnOffCooling() {
-    if (getCoolingStatus()) {
-        Serial.println("HeatControl: cooling OFF");
-        setCoolingStatus(false);
-        mqtt::sendTurnOffCooling(this->_client);
-    }
-}
-
-bool HeatControl::getCoolingStatus() {
-    return this->_isCoolingOn;
-}
-
-void HeatControl::setCoolingStatus(bool isCoolingOn) {
-    this->_isCoolingOn = isCoolingOn;
-}
-
-void HeatControl::turnOnHeating() {
-    turnOffCooling();
-    if (!getHeatingStatus()) {
-        Serial.println("HeatControl: heating ON");
-        setHeatingStatus(true);
-        mqtt::sendTurnOnHeating(this->_client);
-    }
-}
-
-void HeatControl::turnOffHeating() {
-    if (getHeatingStatus()) {
-        Serial.println("HeatControl: heating OFF");
-        setHeatingStatus(false);
-        mqtt::sendTurnOffHeating(this->_client);
-    }
-}
-
-bool HeatControl::getHeatingStatus() {
-    return this->_isHeatingOn;
-}
-
-void HeatControl::setHeatingStatus(bool isHeatingOn) {
-    this->_isHeatingOn = isHeatingOn;
-}
-
 void HeatControl::enable() {
     this->_isEnabled = true;
 }
@@ -98,18 +44,70 @@ bool HeatControl::isEnabled() {
 }
 
 bool HeatControl::update() {
-    bool isEnabled_ = isEnabled();
+    bool valuesChanged = false;
 
-    if (isEnabled_) {
+    if (isEnabled()) {
         _currentTemp = getCurrentTemp();
 
-        if (_currentTemp - _targetTemp >= 1) {
-            turnOnCooling();
-        } else if (_currentTemp - _targetTemp <= -1) {
-            turnOnHeating();
+        double tempDiff = _currentTemp - _targetTemp; // positive if cooling is required
+
+        double absTempDiff = std::abs(tempDiff);;
+        int valueToWrite = std::round(absTempDiff * 20);
+        if (valueToWrite > 100) {
+            valueToWrite = 100;
+        }
+
+        if (tempDiff > 0) {
+            valuesChanged = valuesChanged || setCoolingPercentage(valueToWrite);
+            valuesChanged = valuesChanged || setHeatingPercentage(0);
+        } else if (tempDiff < 0) {
+            valuesChanged = valuesChanged || setHeatingPercentage(valueToWrite);
+            valuesChanged = valuesChanged || setCoolingPercentage(0);
         } else {
-            turnEverythingOff();
+            valuesChanged = valuesChanged || setHeatingPercentage(0);
+            valuesChanged = valuesChanged || setCoolingPercentage(0);
         }
     }
-    return isEnabled_;
+
+    return valuesChanged;
+}
+
+int HeatControl::getCoolingPercentage() {
+    return _currentCoolingPercentage;
+}
+
+int HeatControl::getHeatingPercentage() {
+    return _currentHeatingPercentage;
+}
+
+bool HeatControl::setCoolingPercentage(int percentage) {
+    // if it's being set to 0, but wasn't 0 before, update
+    if (percentage == 0 && _currentCoolingPercentage != 0) {
+        _currentCoolingPercentage = percentage;
+        return true;
+    }
+
+    // if the diff is more than 5%, update
+    if ((std::abs(percentage - _currentCoolingPercentage) >= 5)) {
+        _currentCoolingPercentage = percentage;
+        return true;
+    }
+
+    return false;
+}
+
+bool HeatControl::setHeatingPercentage(int percentage) {
+// if it's being set to 0, but wasn't 0 before, update
+    if (percentage == 0 && _currentHeatingPercentage != 0) {
+        _currentHeatingPercentage = percentage;
+        return true;
+    }
+
+    // if the diff is more than 5%, update
+    if ((std::abs(percentage - _currentHeatingPercentage) >= 5)) {
+        _currentHeatingPercentage = percentage;
+        return true;
+    }
+
+    return false;
 }
