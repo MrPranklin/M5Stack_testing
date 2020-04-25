@@ -8,7 +8,7 @@
 const char *mqtt_out_topic = "M5/out";
 const char *mqtt_out_topic_temp = "M5/temp";
 const char *mqtt_out_topic_hum = "M5/hum";
-const char *mqtt_client_id = "M5Stack_client";
+const char *mqtt_client_id = "M5Stack_temp";
 
 #define INTERVAL 10000
 
@@ -35,7 +35,7 @@ namespace mqtt {
                 Serial.print("connected as ");
                 Serial.println(mqtt_client_id);
                 // Once connected, publish an announcement...
-                client.publish(mqtt_out_topic, "This is M5Stack");
+                client.publish(mqtt_out_topic, "This is M5Stack temp");
                 // ... and resubscribe
                 if (client.subscribe(mqtt_command_heat_control)) {
                     Serial.print("Subscribed to ");

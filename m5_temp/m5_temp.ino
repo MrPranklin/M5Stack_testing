@@ -22,7 +22,7 @@ void check_buttons();
 
 const char *ssid = "Pranklin";
 const char *password = "MrPranklin";
-const char *host = "M5Stack";
+const char *host = "M5Stack temp";
 
 const IPAddress mqtt_server = IPAddress(192, 168, 0, 104);
 const int mqtt_port = 1883;
