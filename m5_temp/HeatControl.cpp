@@ -46,7 +46,9 @@ bool HeatControl::isEnabled() {
 bool HeatControl::update() {
     bool valuesChanged = false;
 
-    if (isEnabled()) {
+    bool isEnabled = this->isEnabled();
+
+    if (this->isEnabled()) {
         _currentTemp = getCurrentTemp();
 
         double tempDiff = _currentTemp - _targetTemp; // positive if cooling is required
@@ -69,7 +71,7 @@ bool HeatControl::update() {
         }
     }
 
-    return valuesChanged;
+    return isEnabled && valuesChanged;
 }
 
 int HeatControl::getCoolingPercentage() {

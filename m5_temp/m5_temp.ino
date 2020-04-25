@@ -111,8 +111,10 @@ void loop() {
 
         if (mqtt::shouldUpdate(millis(), mqttLastMillis)) {
 
-            mqtt::updateHeatingPercentage(mqtt_client, heatControl->getHeatingPercentage());
-            mqtt::updateCoolingPercentage(mqtt_client, heatControl->getCoolingPercentage());
+            if (heatControl->isEnabled()) {
+                mqtt::updateHeatingPercentage(mqtt_client, heatControl->getHeatingPercentage());
+                mqtt::updateCoolingPercentage(mqtt_client, heatControl->getCoolingPercentage());
+            }
 
             mqtt::publish_temperature(mqtt_client, temp);
             mqtt::publish_humidity(mqtt_client, hum);
