@@ -190,6 +190,9 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length) {
         }
     } else if (strTopic == mqtt_command_target_brightness) {
         lightControl->setTargetBrightness(atoi((const char *) payload));
+    } else if (strTopic == mqtt_state_sun) {
+        int received = atoi((const char *) payload);
+        lightControl->setIsSunUp(received > 0);
     }
 }
 

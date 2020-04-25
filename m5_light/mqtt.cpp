@@ -51,6 +51,14 @@ namespace mqtt {
                     Serial.println(mqtt_command_target_brightness);
                 }
 
+                if (client.subscribe(mqtt_state_sun)) {
+                    Serial.print("Subscribed to ");
+                    Serial.println(mqtt_state_sun);
+                } else {
+                    Serial.print("Failed to subscribe to ");
+                    Serial.println(mqtt_state_sun);
+                }
+
                 m5lcd::clear();
             } else {
                 Serial.print("failed, rc=");

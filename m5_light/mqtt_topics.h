@@ -12,4 +12,6 @@
 
 #define mqtt_state_brightness "M5/state/brightness"
 
+#define mqtt_state_sun "HA/state/sun"
+
 #endif //MQTT_TOPICS_H

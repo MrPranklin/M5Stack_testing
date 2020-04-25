@@ -34,8 +34,12 @@ public:
 
     virtual bool setNaturalLightPercentage(int percentage);
 
+    virtual void setIsSunUp(bool isSunUp);
+
+    virtual bool getIsSunUp();
+
 protected:
-    virtual int getCurrentBrightness();
+    virtual int getBrightness();
 
     BrightnessSensor *_brightnessSensor;
     PubSubClient _client;
@@ -45,6 +49,7 @@ protected:
 
     int _currentNaturalLightPercentage{0};
     int _currentArtificialLightPercentage{0};
+    bool _isSunUp{true};
 };
 
 #endif //LIGHT_CONTROL_H

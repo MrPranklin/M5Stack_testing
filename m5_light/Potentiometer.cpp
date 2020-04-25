@@ -7,8 +7,6 @@ Potentiometer::Potentiometer(int pin) {
 }
 
 int Potentiometer::readBrightness() {
-    int value = analogRead(_pin);
-    Serial.println(value);
-    return value;
+    return map(analogRead(_pin), 0, 4095, 0, 100);
 }
 

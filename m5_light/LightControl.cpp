@@ -13,12 +13,18 @@ LightControl::~LightControl() {
     delete _brightnessSensor;
 }
 
-int LightControl::getCurrentBrightness() {
+int LightControl::getBrightness() {
     return _brightnessSensor->readBrightness();
 }
 
 void LightControl::setTargetBrightness(int brightness) {
-    this->_targetBrightness = brightness;
+    if (brightness < 0) {
+        this->_targetBrightness = 0;
+    } else if (brightness > 100) {
+        this->_targetBrightness = 100;
+    } else {
+        this->_targetBrightness = brightness;
+    }
 }
 
 int LightControl::getTargetBrightness() {
@@ -45,28 +51,31 @@ bool LightControl::isEnabled() {
 bool LightControl::update() {
     bool valuesChanged = false;
 
-    bool isEnabled = this->isEnabled();
+    bool isEnabled = _isEnabled;
+    _currentBrightness = getBrightness();
 
     if (isEnabled) {
-        _currentBrightness = getCurrentBrightness();
 
-        double tempDiff = _currentBrightness - _targetBrightness; // positive if darkening is required
+        int diff = _currentBrightness - _targetBrightness; // positive if we need less light
+        int absDiff = std::abs(diff);
 
-        double absTempDiff = std::abs(tempDiff);;
-        int valueToWrite = std::round(absTempDiff * 20);
-        if (valueToWrite > 100) {
-            valueToWrite = 100;
-        }
-
-        if (tempDiff > 0) {
-            valuesChanged = valuesChanged || setArtificialLightPercentage(valueToWrite);
-            valuesChanged = valuesChanged || setNaturalLightPercentage(0);
-        } else if (tempDiff < 0) {
-            valuesChanged = valuesChanged || setNaturalLightPercentage(valueToWrite);
-            valuesChanged = valuesChanged || setArtificialLightPercentage(0);
+        if (getIsSunUp()) {
+            if (diff < -5) { // make it darker
+                setArtificialLightPercentage(0);
+                setNaturalLightPercentage(getNaturalLightPercentage() - 5);
+            } else if (diff > 5) { // make it brighter
+                if (!setNaturalLightPercentage(getNaturalLightPercentage() + 5)) {
+                    // if increasing natural light fails, increase artificial
+                    setArtificialLightPercentage(getArtificialLightPercentage() + 5);
+                }
+            }
         } else {
-            valuesChanged = valuesChanged || setNaturalLightPercentage(0);
-            valuesChanged = valuesChanged || setArtificialLightPercentage(0);
+            setNaturalLightPercentage(0);
+            if (diff < -5) { // make it darker
+                setArtificialLightPercentage(getArtificialLightPercentage() - 5);
+            } else if (diff > 5) { // make it brighter
+                setArtificialLightPercentage(getArtificialLightPercentage() + 5);
+            }
         }
     }
 
@@ -82,10 +91,43 @@ int LightControl::getNaturalLightPercentage() {
 }
 
 bool LightControl::setArtificialLightPercentage(int percentage) {
-    // if it's being set to 0, but wasn't 0 before, update
-    if (percentage == 0 && _currentNaturalLightPercentage != 0) {
-        _currentNaturalLightPercentage = percentage;
+    // if being set to >= 100 and it isn't 100 yet, update
+    if (percentage >= 100 && _currentArtificialLightPercentage < 100) {
+        _currentArtificialLightPercentage = 100;
         return true;
+    } else if (percentage >= 100 && _currentArtificialLightPercentage == 100) {
+        return false;
+    }
+
+    if (percentage <= 0 && _currentArtificialLightPercentage > 0) {
+        _currentArtificialLightPercentage = 0;
+        return true;
+    } else if (percentage <= 0 && _currentArtificialLightPercentage == 0) {
+        return false;
+    }
+
+    // if the diff is more than 5%, update
+    if ((std::abs(percentage - _currentArtificialLightPercentage) >= 5)) {
+        _currentArtificialLightPercentage = percentage;
+        return true;
+    }
+
+    return false;
+}
+
+bool LightControl::setNaturalLightPercentage(int percentage) {
+    if (percentage >= 100 && _currentNaturalLightPercentage < 100) {
+        _currentNaturalLightPercentage = 100;
+        return true;
+    } else if (percentage >= 100 && _currentNaturalLightPercentage == 100) {
+        return false;
+    }
+
+    if (percentage <= 0 && _currentNaturalLightPercentage > 0) {
+        _currentNaturalLightPercentage = 0;
+        return true;
+    } else if (percentage <= 0 && _currentNaturalLightPercentage == 0) {
+        return false;
     }
 
     // if the diff is more than 5%, update
@@ -97,18 +139,10 @@ bool LightControl::setArtificialLightPercentage(int percentage) {
     return false;
 }
 
-bool LightControl::setNaturalLightPercentage(int percentage) {
-// if it's being set to 0, but wasn't 0 before, update
-    if (percentage == 0 && _currentArtificialLightPercentage != 0) {
-        _currentArtificialLightPercentage = percentage;
-        return true;
-    }
+bool LightControl::getIsSunUp() {
+    return this->_isSunUp;
+}
 
-    // if the diff is more than 5%, update
-    if ((std::abs(percentage - _currentArtificialLightPercentage) >= 5)) {
-        _currentArtificialLightPercentage = percentage;
-        return true;
-    }
-
-    return false;
+void LightControl::setIsSunUp(bool isSunUp) {
+    this->_isSunUp = isSunUp;
 }

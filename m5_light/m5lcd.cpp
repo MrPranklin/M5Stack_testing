@@ -32,7 +32,7 @@ showTemperature(int brightness, bool isLightControlEnabled, int naturalLightPerc
     M5.Lcd.setTextSize(5);
     M5.Lcd.setCursor(70, 100);
     M5.Lcd.setTextColor(TFT_GREEN, TFT_BLACK);
-    M5.Lcd.printf("%d  ", brightness);
+    M5.Lcd.printf("%d%%  ", brightness);
 
     if (isLightControlEnabled) {
 
@@ -67,7 +67,7 @@ void showTargetBrightness(int brightness) {
     M5.Lcd.setTextSize(5);
     M5.Lcd.setCursor(70, 100);
     M5.Lcd.setTextColor(TFT_YELLOW, TFT_BLACK);
-    M5.Lcd.printf("%d  ", brightness);
+    M5.Lcd.printf("%d%%  ", brightness);
 }
 
 namespace m5lcd {
