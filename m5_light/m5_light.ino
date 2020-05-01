@@ -13,23 +13,19 @@
 #include "BrightnessSensor.hpp"
 #include "Potentiometer.hpp"
 
-#define POT_PIN 35
-
-void callback(char *topic, byte *payload, unsigned int length);
-
 void setup_wifi();
 
-void check_buttons();
+bool checkButtons();
 
 const char *ssid = "Pranklin";
 const char *password = "MrPranklin";
 const char *host = "M5Stack_light";
 
-const IPAddress mqtt_server = IPAddress(192, 168, 0, 104);
+const IPAddress mqtt_server = IPAddress(192, 168, 0, 24);
 const int mqtt_port = 1883;
 
-state_n::StateEnum state = state_n::brightness;
-state_n::StateEnum oldState = state_n::brightness;
+state_n::StateEnum state = state_n::showCurrent;
+state_n::StateEnum oldState = state_n::showCurrent;
 
 long mqttLastMillis = 0;
 
@@ -37,9 +33,6 @@ WiFiClient wifi_client;
 PubSubClient mqtt_client(wifi_client);
 
 LightControl *lightControl;
-BrightnessSensor *sensor;
-
-int brightness = 0;
 
 void setup() {
     Serial.begin(115200);
@@ -47,27 +40,21 @@ void setup() {
     M5.Power.begin();
     M5.Power.setPowerBoostKeepOn(false); // dont always output power
 
-    sensor = new Potentiometer(POT_PIN);
-    lightControl = new LightControl(sensor, mqtt_client);
-    lightControl->setTargetBrightness(22);
+    lightControl = new LightControl(mqtt_client);
 
     m5lcd::begin();
 
-    m5lcd::show_setting_up();
+    m5lcd::showSettingUp();
 
     ledcDetachPin(SPEAKER_PIN); // turn off speaker, less crackling
     setup_wifi();
 
     ota::begin();
 
-    brightness = sensor->readBrightness();
-
     m5lcd::clear();
 
-    m5lcd::update_display(
+    m5lcd::updateDisplay(
             state,
-            brightness,
-            lightControl->getTargetBrightness(),
             lightControl->isEnabled(),
             lightControl->getNaturalLightPercentage(),
             lightControl->getArtificialLightPercentage()
@@ -85,21 +72,24 @@ void loop() {
         Serial.println("MQTT disconnected");
         mqtt::reconnect(mqtt_client);
     } else {
+        if (checkButtons()) {
+            if (lightControl->isEnabled()) {
+                mqtt::updateNaturalLightPercentage(mqtt_client, lightControl->getNaturalLightPercentage());
+                mqtt::updateArtificialLightPercentage(mqtt_client, lightControl->getArtificialLightPercentage());
+            }
+        } else if (mqtt::shouldUpdate(millis(), mqttLastMillis)) {
+            if (lightControl->isEnabled()) {
+                mqtt::updateNaturalLightPercentage(mqtt_client, lightControl->getNaturalLightPercentage());
+                mqtt::updateArtificialLightPercentage(mqtt_client, lightControl->getArtificialLightPercentage());
+            }
 
-        if (lightControl->update()) {
-            mqtt::updateNaturalLightPercentage(mqtt_client, lightControl->getNaturalLightPercentage());
-            mqtt::updateArtificialLightPercentage(mqtt_client, lightControl->getArtificialLightPercentage());
+            mqttLastMillis = millis();
         }
+        {}
 
-        brightness = sensor->readBrightness();
-
-        check_buttons();
-
-        if (m5lcd::is_display_on()) {
-            m5lcd::update_display(
+        if (m5lcd::isDisplayOn()) {
+            m5lcd::updateDisplay(
                     state,
-                    brightness,
-                    lightControl->getTargetBrightness(),
                     lightControl->isEnabled(),
                     lightControl->getNaturalLightPercentage(),
                     lightControl->getArtificialLightPercentage()
@@ -113,55 +103,56 @@ void loop() {
                 mqtt::updateArtificialLightPercentage(mqtt_client, lightControl->getArtificialLightPercentage());
             }
 
-            mqtt::publishBrightness(mqtt_client, brightness);
-
             mqttLastMillis = millis();
         }
     }
 }
 
-void set_state(state_n::StateEnum new_state) {
-    m5lcd::set_display_state(true);
+void setState(state_n::StateEnum newState) {
+    m5lcd::setDisplayState(true);
     m5lcd::clear();
 
-    state = new_state;
+    state = newState;
 
     Serial.print("State set to: ");
     Serial.println(state);
 
-    m5lcd::update_display(
+    m5lcd::updateDisplay(
             state,
-            brightness,
-            lightControl->getTargetBrightness(),
             lightControl->isEnabled(),
             lightControl->getNaturalLightPercentage(),
             lightControl->getArtificialLightPercentage()
     );
 }
 
-void check_buttons() {
+bool checkButtons() {
     M5.update(); // reads button state
 
     if (M5.BtnA.wasPressed()) {
-        if (state == state_n::setTargetTemperature) {
-            int curr = lightControl->incrementTargetBrightness(5);
-            mqtt::updateTargetBrightness(mqtt_client, curr);
-        } else {
-            set_state(state_n::brightness);
+        if (state == state_n::showCurrent) {
+            setState(state_n::setNatural);
+        } else if (state == state_n::setArtificial) {
+            int curr = lightControl->incrementArtificialLight(5);
+        } else if (state == state_n::setNatural) {
+            int curr = lightControl->incrementNaturalLight(5);
         }
+
+        return true;
     } else if (M5.BtnB.wasPressed()) {
-        if (state == state_n::setTargetTemperature) {
-            int curr = lightControl->incrementTargetBrightness(-5);
-            mqtt::updateTargetBrightness(mqtt_client, curr);
+        if (state == state_n::showCurrent) {
+            setState(state_n::setArtificial);
+        } else if (state == state_n::setArtificial) {
+            int curr = lightControl->incrementArtificialLight(-5);
+        } else if (state == state_n::setNatural) {
+            int curr = lightControl->incrementNaturalLight(-5);
         }
+
+        return true;
     } else if (M5.BtnC.wasPressed()) {
-        if (state == state_n::setTargetTemperature) {
-            set_state(oldState);
-        } else {
-            oldState = state;
-            set_state(state_n::setTargetTemperature);
-        }
+        setState(state_n::showCurrent);
     }
+
+    return false;
 }
 
 void mqtt_callback(char *topic, byte *payload, unsigned int length) {
@@ -180,7 +171,8 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length) {
             lightControl->enable();
             mqtt::confirmLightControlOn(mqtt_client);
 
-            lightControl->update();
+            mqtt::updateNaturalLightPercentage(mqtt_client, lightControl->getNaturalLightPercentage());
+            mqtt::updateArtificialLightPercentage(mqtt_client, lightControl->getArtificialLightPercentage());
 
             m5lcd::clear();
         } else if (pyld == "OFF") {
@@ -188,11 +180,6 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length) {
             mqtt::confirmLightControlOff(mqtt_client);
             m5lcd::clear();
         }
-    } else if (strTopic == mqtt_command_target_brightness) {
-        lightControl->setTargetBrightness(atoi((const char *) payload));
-    } else if (strTopic == mqtt_state_sun) {
-        int received = atoi((const char *) payload);
-        lightControl->setIsSunUp(received > 0);
     }
 }
 

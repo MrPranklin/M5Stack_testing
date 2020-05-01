@@ -5,7 +5,7 @@
 
 #define DEFAULT_BRIGHTNESS 50
 
-void update_battery_level(int level) {
+void updateBatteryLevel(int level) {
     if (level <= 100 && level > 75) {
         M5.Lcd.setTextColor(TFT_GREEN, TFT_BLACK);
     } else if (level <= 75 && level > 50) {
@@ -22,96 +22,102 @@ void update_battery_level(int level) {
     M5.Lcd.printf("Battery: %d%%  ", level);
 }
 
-void
-showTemperature(int brightness, bool isLightControlEnabled, int naturalLightPercentage, int artificialLightPercentage) {
-    M5.Lcd.setTextSize(3);
-    M5.Lcd.setCursor(30, 50);
-    M5.Lcd.setTextColor(TFT_GREEN, TFT_BLACK);
-    M5.Lcd.print("Brightness:");
-
-    M5.Lcd.setTextSize(5);
-    M5.Lcd.setCursor(70, 100);
-    M5.Lcd.setTextColor(TFT_GREEN, TFT_BLACK);
-    M5.Lcd.printf("%d%%  ", brightness);
-
+void showCurrent(bool isLightControlEnabled, int naturalLightPercentage, int artificialLightPercentage) {
     if (isLightControlEnabled) {
 
-        M5.Lcd.setTextSize(2);
-        M5.Lcd.setCursor(70, 160);
+        M5.Lcd.setTextSize(3);
+        M5.Lcd.setCursor(20, 80);
 
         M5.Lcd.setTextColor(TFT_ORANGE, TFT_BLACK);
 
-
         M5.Lcd.printf("Natural: %d%%  ", naturalLightPercentage);
 
-        M5.Lcd.setCursor(70, 190);
+        M5.Lcd.setCursor(20, 130);
         M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK);
 
         M5.Lcd.printf("Artificial: %d%%  ", artificialLightPercentage);
 
     } else {
-        M5.Lcd.setTextSize(2);
-        M5.Lcd.setCursor(40, 175);
+        M5.Lcd.setTextSize(3);
+        M5.Lcd.setCursor(50, 100);
         M5.Lcd.setTextColor(TFT_RED, TFT_BLACK);
 
-        M5.Lcd.print("Light control disabled");
+        M5.Lcd.print("Light control");
+
+        M5.Lcd.setCursor(90, 140);
+        M5.Lcd.print("disabled");
     }
 }
 
-void showTargetBrightness(int brightness) {
+void showSetNaturalLightPercentage(int percentage) {
     M5.Lcd.setTextSize(3);
     M5.Lcd.setCursor(30, 50);
-    M5.Lcd.setTextColor(TFT_YELLOW, TFT_BLACK);
-    M5.Lcd.print("Set target br:");
+    M5.Lcd.setTextColor(TFT_ORANGE, TFT_BLACK);
+    M5.Lcd.print("Set natural:");
 
     M5.Lcd.setTextSize(5);
     M5.Lcd.setCursor(70, 100);
-    M5.Lcd.setTextColor(TFT_YELLOW, TFT_BLACK);
-    M5.Lcd.printf("%d%%  ", brightness);
+    M5.Lcd.setTextColor(TFT_ORANGE, TFT_BLACK);
+    M5.Lcd.printf("%d%%  ", percentage);
+}
+
+void showSetArtificialLightPercentage(int percentage) {
+    M5.Lcd.setTextSize(3);
+    M5.Lcd.setCursor(30, 50);
+    M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK);
+    M5.Lcd.print("Set artificial:");
+
+    M5.Lcd.setTextSize(5);
+    M5.Lcd.setCursor(70, 100);
+    M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK);
+    M5.Lcd.printf("%d%%  ", percentage);
 }
 
 namespace m5lcd {
-    bool is_on = true;
+    bool _isOn = true;
 
     void begin() {
         M5.Lcd.fillScreen(TFT_BLACK);
         M5.Lcd.setBrightness(DEFAULT_BRIGHTNESS);
     }
 
-    void toggle_display() {
-        set_display_state(!is_on);
+    void toggleDisplay() {
+        setDisplayState(!_isOn);
     }
 
-    void set_display_state(bool new_state) {
+    void setDisplayState(bool new_state) {
         if (new_state) {
-            is_on = true;
+            _isOn = true;
             M5.Lcd.setBrightness(DEFAULT_BRIGHTNESS);
         } else {
-            is_on = false;
+            _isOn = false;
             M5.Lcd.setBrightness(0);
         }
     }
 
-    void update_display(state_n::StateEnum state,
-                        int brightness,
-                        int currentTargetBrightness,
-                        bool isLightControlEnabled,
-                        int naturalLightPercentage,
-                        int artificialLightPercentage
+    void updateDisplay(state_n::StateEnum state,
+                       bool isLightControlEnabled,
+                       int naturalLightPercentage,
+                       int artificialLightPercentage
     ) {
-        update_battery_level(M5.Power.getBatteryLevel());
+        updateBatteryLevel(M5.Power.getBatteryLevel());
 
         switch (state) {
-            case state_n::brightness:
-                showTemperature(brightness, isLightControlEnabled, naturalLightPercentage, artificialLightPercentage);
+            case state_n::showCurrent:
+                showCurrent(isLightControlEnabled, naturalLightPercentage, artificialLightPercentage);
                 break;
 
-            case state_n::setTargetTemperature:
-                showTargetBrightness(currentTargetBrightness);
+            case state_n::setNatural:
+                showSetNaturalLightPercentage(naturalLightPercentage);
+                break;
+
+            case state_n::setArtificial:
+                showSetArtificialLightPercentage(artificialLightPercentage);
+                break;
         }
     }
 
-    void show_setting_up() {
+    void showSettingUp() {
         showMessage("Setting up...");
     }
 
@@ -119,8 +125,8 @@ namespace m5lcd {
         M5.Lcd.clear();
     }
 
-    bool is_display_on() {
-        return is_on;
+    bool isDisplayOn() {
+        return _isOn;
     }
 
     void showMessage(const char *message) {

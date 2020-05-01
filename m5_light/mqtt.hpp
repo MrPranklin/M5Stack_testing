@@ -8,15 +8,11 @@ namespace mqtt {
 
     void reconnect(PubSubClient client);
 
-    void publishBrightness(PubSubClient client, int brightness);
-
     bool shouldUpdate(long millis, long lastMillis);
 
     void updateArtificialLightPercentage(PubSubClient client, int percentage);
 
     void updateNaturalLightPercentage(PubSubClient client, int percentage);
-
-    void updateTargetBrightness(PubSubClient client, int brightness);
 
     void confirmLightControlOn(PubSubClient client);
 

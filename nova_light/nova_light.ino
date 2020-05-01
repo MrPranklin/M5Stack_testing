@@ -17,7 +17,7 @@ const char *ssid = "Pranklin";
 const char *password = "MrPranklin";
 const char *host = "Nova_LightController";
 
-const IPAddress mqttServerIp = IPAddress(192, 168, 0, 104);
+const IPAddress mqttServerIp = IPAddress(192, 168, 0, 24);
 const int mqttServerPort = 1883;
 
 WiFiClient wifiClient;

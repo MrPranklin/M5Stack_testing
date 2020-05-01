@@ -24,7 +24,7 @@ const char *ssid = "Pranklin";
 const char *password = "MrPranklin";
 const char *host = "M5Stack temp";
 
-const IPAddress mqtt_server = IPAddress(192, 168, 0, 104);
+const IPAddress mqtt_server = IPAddress(192, 168, 0, 24);
 const int mqtt_port = 1883;
 
 state_n::StateEnum state = state_n::temperature;

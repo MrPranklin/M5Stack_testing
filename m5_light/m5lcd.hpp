@@ -6,23 +6,21 @@
 namespace m5lcd {
     void begin();
 
-    void toggle_display();
+    void toggleDisplay();
 
-    void set_display_state(bool is_on);
+    void setDisplayState(bool is_on);
 
-    void update_display(state_n::StateEnum state,
-                        int brightness,
-                        int currentTargetBrightness,
-                        bool isLightControlEnabled,
-                        int naturalLightPercentage,
-                        int artificialLightPercentage
+    void updateDisplay(state_n::StateEnum state,
+                       bool isLightControlEnabled,
+                       int naturalLightPercentage,
+                       int artificialLightPercentage
     );
 
-    void show_setting_up();
+    void showSettingUp();
 
     void clear();
 
-    bool is_display_on();
+    bool isDisplayOn();
 
     void showMessage(const char *message);
 }  // namespace m5lcd

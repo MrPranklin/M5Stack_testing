@@ -8,23 +8,15 @@
 
 class LightControl {
 public:
-    LightControl(BrightnessSensor *lightSensor, PubSubClient client);
+    explicit LightControl(PubSubClient client);
 
-    ~LightControl();
-
-    virtual void setTargetBrightness(int brightness);
-
-    virtual bool update();
+    ~LightControl() = default;
 
     virtual void enable();
 
     virtual void disable();
 
     virtual bool isEnabled();
-
-    virtual int getTargetBrightness();
-
-    virtual int incrementTargetBrightness(int amount);
 
     virtual int getArtificialLightPercentage();
 
@@ -34,22 +26,16 @@ public:
 
     virtual bool setNaturalLightPercentage(int percentage);
 
-    virtual void setIsSunUp(bool isSunUp);
+    virtual int incrementArtificialLight(int amount);
 
-    virtual bool getIsSunUp();
+    virtual int incrementNaturalLight(int amount);
 
 protected:
-    virtual int getBrightness();
-
-    BrightnessSensor *_brightnessSensor;
     PubSubClient _client;
     bool _isEnabled{false};
-    int _targetBrightness{0};
-    int _currentBrightness{0};
 
     int _currentNaturalLightPercentage{0};
     int _currentArtificialLightPercentage{0};
-    bool _isSunUp{true};
 };
 
 #endif //LIGHT_CONTROL_H

@@ -4,8 +4,9 @@
 namespace state_n {
 
     enum StateEnum {
-        brightness,
-        setTargetTemperature
+        showCurrent,
+        setArtificial,
+        setNatural
     };
 }
 

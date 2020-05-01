@@ -43,22 +43,6 @@ namespace mqtt {
                     Serial.println(mqtt_command_light_control);
                 }
 
-                if (client.subscribe(mqtt_command_target_brightness)) {
-                    Serial.print("Subscribed to ");
-                    Serial.println(mqtt_command_target_brightness);
-                } else {
-                    Serial.print("Failed to subscribe to ");
-                    Serial.println(mqtt_command_target_brightness);
-                }
-
-                if (client.subscribe(mqtt_state_sun)) {
-                    Serial.print("Subscribed to ");
-                    Serial.println(mqtt_state_sun);
-                } else {
-                    Serial.print("Failed to subscribe to ");
-                    Serial.println(mqtt_state_sun);
-                }
-
                 m5lcd::clear();
             } else {
                 Serial.print("failed, rc=");
@@ -68,12 +52,6 @@ namespace mqtt {
                 delay(5000);
             }
         }
-    }
-
-    void publishBrightness(PubSubClient client, int brightness) {
-        char output[10];
-        dtostrf(brightness, 6, 2, output);
-        send_data(client, mqtt_state_brightness, output, false);
     }
 
     bool shouldUpdate(long millis, long lastMillis) {
@@ -100,12 +78,6 @@ namespace mqtt {
         send_data(client, mqtt_command_natural, buff, true);
     }
 
-    void updateTargetBrightness(PubSubClient client, int brightness) {
-        char buff[10];
-        sprintf(buff, "%d", brightness);
-        send_data(client, mqtt_state_target_brightness, buff, true);
-    }
-
     bool unsubscribe(PubSubClient client, const char *topic) {
         bool result = client.unsubscribe(topic);
 
@@ -119,5 +91,4 @@ namespace mqtt {
 
         return result;
     }
-
 }
