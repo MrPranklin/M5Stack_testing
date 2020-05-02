@@ -9,7 +9,7 @@ class DHT22_C : public HumSensor, public TempSensor {
 public:
     explicit DHT22_C(short int pin);
 
-    ~DHT22_C();
+    ~DHT22_C() override;
 
     void begin();
 

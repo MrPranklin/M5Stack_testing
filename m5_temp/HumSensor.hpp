@@ -3,6 +3,8 @@
 
 class HumSensor {
 public:
+    virtual ~HumSensor() = default;
+
     virtual float readHumidity() = 0;
 };
 

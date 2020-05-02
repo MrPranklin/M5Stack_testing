@@ -4,6 +4,7 @@
 #include <WebServer.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
+#include <Wire.h>
 
 #include "DHT22_C.hpp"
 #include "m5lcd.hpp"
@@ -11,6 +12,7 @@
 #include "ota.hpp"
 #include "HeatControl.hpp"
 #include "mqtt_topics.h"
+#include "BME280.hpp"
 
 #define DHTPIN 26
 
@@ -32,7 +34,8 @@ state_n::StateEnum oldState = state_n::temperature;
 
 long mqttLastMillis = 0;
 
-DHT22_C dht22(DHTPIN);
+BME280 bme;
+
 WiFiClient wifi_client;
 PubSubClient mqtt_client(wifi_client);
 
@@ -43,12 +46,10 @@ float hum = 0.0;
 
 void setup() {
     Serial.begin(115200);
+    Wire.begin();
     M5.begin();
     M5.Power.begin();
     M5.Power.setPowerBoostKeepOn(false); // dont always output power
-
-    heatControl = new HeatControl(&dht22, mqtt_client);
-    heatControl->setTargetTemp(22);
 
     m5lcd::begin();
 
@@ -58,22 +59,10 @@ void setup() {
     setup_wifi();
 
     ota::begin();
-    dht22.begin();
 
-    hum = dht22.readHumidity();
-    temp = dht22.readTemperature();
+    bme.begin();
 
-    m5lcd::clear();
-
-    m5lcd::update_display(
-            state,
-            temp,
-            hum,
-            heatControl->getTargetTemp(),
-            heatControl->isEnabled(),
-            heatControl->getHeatingPercentage(),
-            heatControl->getCoolingPercentage()
-    );
+    heatControl = new HeatControl(&bme, mqtt_client);
 
     Serial.println("Setup finished");
     m5lcd::showMessage("Setup done");
@@ -87,8 +76,8 @@ void loop() {
         Serial.println("MQTT disconnected");
         mqtt::reconnect(mqtt_client);
     } else {
-        temp = dht22.readTemperature();
-        hum = dht22.readHumidity();
+        temp = bme.readTemperature();
+        hum = bme.readHumidity();
 
         if (heatControl->update()) {
             mqtt::updateHeatingPercentage(mqtt_client, heatControl->getHeatingPercentage());

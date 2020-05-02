@@ -43,7 +43,7 @@ protected:
     TempSensor *_tempSensor;
     PubSubClient _client;
     bool _isEnabled{false};
-    float _targetTemp{0};
+    float _targetTemp{22};
     float _currentTemp{0};
 
     int _currentCoolingPercentage{0};
