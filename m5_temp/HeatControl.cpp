@@ -1,13 +1,25 @@
 #include <cmath>
 #include <Arduino.h>
+#include <AutoPID.h>
 
 #include "HeatControl.hpp"
 #include "DHT22_C.hpp"
 #include "mqtt.hpp"
 
+#define KP 5
+#define KI 0.1
+#define OUTPUT_MIN -100
+#define OUTPUT_MAX 100
+#define PID_INTERVAL 1000
+#define PID_THRESHOLD 5
+
 HeatControl::HeatControl(TempSensor *tempSensor, PubSubClient client) {
     this->_tempSensor = tempSensor;
     this->_client = client;
+    this->_autopid = new AutoPID(&_currentTempDouble, &_targetTempDouble, &PID_output, OUTPUT_MIN, OUTPUT_MAX, KP, KI,
+                                 0);
+    this->_autopid->setBangBang(PID_THRESHOLD); // if the diff is 5, rank it up to max
+    this->_autopid->setTimeStep(PID_INTERVAL); // recalculate every n ms
 }
 
 HeatControl::~HeatControl() {
@@ -19,7 +31,9 @@ float HeatControl::getCurrentTemp() {
 }
 
 void HeatControl::setTargetTemp(float temp) {
+    _autopid->reset();
     this->_targetTemp = temp;
+    _targetTempDouble = static_cast<double>(temp);
 }
 
 float HeatControl::getTargetTemp() {
@@ -50,24 +64,22 @@ bool HeatControl::update() {
 
     if (this->isEnabled()) {
         _currentTemp = getCurrentTemp();
+        _currentTempDouble = static_cast<double>(_currentTemp);
+        _autopid->run();
 
-        double tempDiff = _currentTemp - _targetTemp; // positive if cooling is required
 
-        double absTempDiff = std::abs(tempDiff);;
-        int valueToWrite = std::round(absTempDiff * 20);
-        if (valueToWrite > 100) {
-            valueToWrite = 100;
-        }
+        if (PID_output != PID_output_old) {
+            PID_output_old = PID_output;
 
-        if (tempDiff > 0) {
-            valuesChanged = valuesChanged || setCoolingPercentage(valueToWrite);
-            valuesChanged = valuesChanged || setHeatingPercentage(0);
-        } else if (tempDiff < 0) {
-            valuesChanged = valuesChanged || setHeatingPercentage(valueToWrite);
-            valuesChanged = valuesChanged || setCoolingPercentage(0);
-        } else {
-            valuesChanged = valuesChanged || setHeatingPercentage(0);
-            valuesChanged = valuesChanged || setCoolingPercentage(0);
+            Serial.println(PID_output);
+
+            if (PID_output < 0) {
+                setCoolingPercentage(std::abs(PID_output));
+                setHeatingPercentage(0);
+            } else {
+                setHeatingPercentage(PID_output);
+                setCoolingPercentage(0);
+            }
         }
     }
 
@@ -82,34 +94,10 @@ int HeatControl::getHeatingPercentage() {
     return _currentHeatingPercentage;
 }
 
-bool HeatControl::setCoolingPercentage(int percentage) {
-    // if it's being set to 0, but wasn't 0 before, update
-    if (percentage == 0 && _currentCoolingPercentage != 0) {
-        _currentCoolingPercentage = percentage;
-        return true;
-    }
-
-    // if the diff is more than 5%, update
-    if ((std::abs(percentage - _currentCoolingPercentage) >= 5)) {
-        _currentCoolingPercentage = percentage;
-        return true;
-    }
-
-    return false;
+void HeatControl::setCoolingPercentage(int percentage) {
+    _currentCoolingPercentage = percentage;
 }
 
-bool HeatControl::setHeatingPercentage(int percentage) {
-// if it's being set to 0, but wasn't 0 before, update
-    if (percentage == 0 && _currentHeatingPercentage != 0) {
-        _currentHeatingPercentage = percentage;
-        return true;
-    }
-
-    // if the diff is more than 5%, update
-    if ((std::abs(percentage - _currentHeatingPercentage) >= 5)) {
-        _currentHeatingPercentage = percentage;
-        return true;
-    }
-
-    return false;
+void HeatControl::setHeatingPercentage(int percentage) {
+    _currentHeatingPercentage = percentage;
 }

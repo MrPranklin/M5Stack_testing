@@ -8,6 +8,7 @@
 #include "Heater.hpp"
 #include "DHT22_C.hpp"
 #include <vector>
+#include <AutoPID.h>
 
 class HeatControl {
 public:
@@ -33,21 +34,25 @@ public:
 
     virtual int getHeatingPercentage();
 
-    virtual bool setCoolingPercentage(int percentage);
+    virtual void setCoolingPercentage(int percentage);
 
-    virtual bool setHeatingPercentage(int percentage);
+    virtual void setHeatingPercentage(int percentage);
 
 protected:
     virtual float getCurrentTemp();
 
     TempSensor *_tempSensor;
     PubSubClient _client;
+    AutoPID *_autopid;
     bool _isEnabled{false};
     float _targetTemp{22};
-    float _currentTemp{0};
+    double _targetTempDouble{22.};
+    float _currentTemp{22};
+    double _currentTempDouble{22.};
 
     int _currentCoolingPercentage{0};
     int _currentHeatingPercentage{0};
+    double PID_output, PID_output_old;
 };
 
 #endif //HEAT_CONTROL_H
