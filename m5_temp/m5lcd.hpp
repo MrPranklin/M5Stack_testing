@@ -16,7 +16,8 @@ namespace m5lcd {
                         float currentTargetTemp,
                         bool isHeatControlEnabled,
                         int heatingPercentage,
-                        int coolingPercentage
+                        int coolingPercentage,
+                        String formattedTime
     );
 
     void show_setting_up();

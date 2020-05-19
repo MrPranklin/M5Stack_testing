@@ -5,6 +5,8 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <Wire.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 
 #include "DHT22_C.hpp"
 #include "m5lcd.hpp"
@@ -13,8 +15,6 @@
 #include "HeatControl.hpp"
 #include "mqtt_topics.h"
 #include "BME280.hpp"
-
-#define DHTPIN 26
 
 void callback(char *topic, byte *payload, unsigned int length);
 
@@ -39,6 +39,9 @@ BME280 bme;
 WiFiClient wifi_client;
 PubSubClient mqtt_client(wifi_client);
 
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP);
+
 HeatControl *heatControl;
 
 float temp = 0.0;
@@ -60,6 +63,8 @@ void setup() {
 
     ota::begin();
 
+    timeClient.begin();
+
     bme.begin();
 
     heatControl = new HeatControl(&bme, mqtt_client);
@@ -71,6 +76,7 @@ void setup() {
 
 void loop() {
     ota::handle_client();
+    timeClient.update();
 
     if (!mqtt_client.loop()) {
         Serial.println("MQTT disconnected");
@@ -94,7 +100,8 @@ void loop() {
                     heatControl->getTargetTemp(),
                     heatControl->isEnabled(),
                     heatControl->getHeatingPercentage(),
-                    heatControl->getCoolingPercentage()
+                    heatControl->getCoolingPercentage(),
+                    timeClient.getFormattedTime()
             );
         }
 
@@ -129,7 +136,8 @@ void set_state(state_n::StateEnum new_state) {
             heatControl->getTargetTemp(),
             heatControl->isEnabled(),
             heatControl->getHeatingPercentage(),
-            heatControl->getCoolingPercentage()
+            heatControl->getCoolingPercentage(),
+            timeClient.getFormattedTime()
     );
 }
 

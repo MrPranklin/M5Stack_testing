@@ -81,6 +81,12 @@ void showHumidity(float hum) {
     M5.Lcd.printf("%.2f%%  ", hum);
 }
 
+void showTime(String formattedTime) {
+    M5.Lcd.setTextSize(3);
+    M5.Lcd.setCursor(90, 0);
+    M5.Lcd.print(formattedTime.c_str());
+}
+
 namespace m5lcd {
     bool is_on = true;
 
@@ -109,9 +115,11 @@ namespace m5lcd {
                         float targetTemp,
                         bool isHeatControlEnabled,
                         int heatingPercentage,
-                        int coolingPercentage
+                        int coolingPercentage,
+                        String formattedTime
     ) {
         update_battery_level(M5.Power.getBatteryLevel());
+        showTime(formattedTime);
 
         switch (state) {
             case state_n::temperature:
