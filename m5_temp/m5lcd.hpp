@@ -17,7 +17,7 @@ namespace m5lcd {
                         bool isHeatControlEnabled,
                         int heatingPercentage,
                         int coolingPercentage,
-                        String formattedTime
+                        const String &formattedTime
     );
 
     void show_setting_up();

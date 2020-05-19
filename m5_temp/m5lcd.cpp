@@ -1,11 +1,12 @@
 #include <M5Stack.h>
 #include <Arduino.h>
+#include <string>
 
 #include "m5lcd.hpp"
 
 #define DEFAULT_BRIGHTNESS 50
 
-void update_battery_level(int level) {
+void showBatteryLevel(int level) {
     if (level <= 100 && level > 75) {
         M5.Lcd.setTextColor(TFT_GREEN, TFT_BLACK);
     } else if (level <= 75 && level > 50) {
@@ -19,45 +20,64 @@ void update_battery_level(int level) {
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(0, 0);
 
-    M5.Lcd.printf("Battery: %d%%  ", level);
+    M5.Lcd.printf("%d%%  ", level);
 }
 
-void showTemperature(float temp, bool isHeatControlEnabled, int heatingPercentage, int coolingPercentage) {
+void showTime(const String &formattedTime) {
     M5.Lcd.setTextSize(3);
-    M5.Lcd.setCursor(30, 50);
-    M5.Lcd.setTextColor(TFT_GREEN, TFT_BLACK);
-    M5.Lcd.print("Temperature:");
+    M5.Lcd.setCursor(90, 0);
+    M5.Lcd.print(formattedTime.c_str());
+}
 
-    M5.Lcd.setTextSize(5);
-    M5.Lcd.setCursor(70, 100);
+void showTargetTemp(float targetTemp) {
+    M5.Lcd.setTextSize(4);
+    M5.Lcd.setCursor(5, 110);
+    M5.Lcd.setTextColor(TFT_PINK, TFT_BLACK);
+    M5.Lcd.printf("Trgt: %.2f`C  ", targetTemp);
+}
+
+void showHumidity(float hum) {
+    M5.Lcd.setTextSize(3);
+    M5.Lcd.setCursor(60, 160);
+    M5.Lcd.setTextColor(TFT_CYAN, TFT_BLACK);
+    M5.Lcd.printf("Hum: %3.2f%% ", hum);
+}
+
+void showCurrentTemp(float temp) {
+    M5.Lcd.setTextSize(6);
+    M5.Lcd.setCursor(40, 40);
     M5.Lcd.setTextColor(TFT_GREEN, TFT_BLACK);
     M5.Lcd.printf("%.2f`C  ", temp);
+}
 
+void showHeatControlStatus(bool isHeatControlEnabled, int coolingPercentage, int heatingPercentage) {
     if (isHeatControlEnabled) {
 
         M5.Lcd.setTextSize(2);
-        M5.Lcd.setCursor(70, 160);
-
+        M5.Lcd.setCursor(80, 210);
         M5.Lcd.setTextColor(TFT_ORANGE, TFT_BLACK);
 
-
-        M5.Lcd.printf("Heating: %d%%  ", heatingPercentage);
-
-        M5.Lcd.setCursor(70, 190);
-        M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK);
-
-        M5.Lcd.printf("Cooling: %d%%  ", coolingPercentage);
+        M5.Lcd.printf("C: %d%%  H: %d%%  ", coolingPercentage, heatingPercentage);
 
     } else {
         M5.Lcd.setTextSize(2);
-        M5.Lcd.setCursor(40, 175);
+        M5.Lcd.setCursor(190, 210);
         M5.Lcd.setTextColor(TFT_RED, TFT_BLACK);
 
         M5.Lcd.print("Heat control disabled");
     }
 }
 
-void showTargetTemperature(float temp) {
+void showMainScreen(float temp, float targetTemp, float hum, bool isHeatControlEnabled, int heatingPercentage,
+                    int coolingPercentage) {
+
+    showCurrentTemp(temp);
+    showTargetTemp(targetTemp);
+    showHumidity(hum);
+    showHeatControlStatus(isHeatControlEnabled, coolingPercentage, heatingPercentage);
+}
+
+void showSetTargetTemp(float targetTemp) {
     M5.Lcd.setTextSize(3);
     M5.Lcd.setCursor(30, 50);
     M5.Lcd.setTextColor(TFT_YELLOW, TFT_BLACK);
@@ -66,25 +86,7 @@ void showTargetTemperature(float temp) {
     M5.Lcd.setTextSize(5);
     M5.Lcd.setCursor(70, 100);
     M5.Lcd.setTextColor(TFT_YELLOW, TFT_BLACK);
-    M5.Lcd.printf("%.2f`C  ", temp);
-}
-
-void showHumidity(float hum) {
-    M5.Lcd.setTextSize(3);
-    M5.Lcd.setCursor(30, 50);
-    M5.Lcd.setTextColor(TFT_CYAN, TFT_BLACK);
-    M5.Lcd.print("Humidity:");
-
-    M5.Lcd.setTextSize(5);
-    M5.Lcd.setCursor(70, 100);
-    M5.Lcd.setTextColor(TFT_CYAN, BLACK);
-    M5.Lcd.printf("%.2f%%  ", hum);
-}
-
-void showTime(String formattedTime) {
-    M5.Lcd.setTextSize(3);
-    M5.Lcd.setCursor(90, 0);
-    M5.Lcd.print(formattedTime.c_str());
+    M5.Lcd.printf("%.2f`C  ", targetTemp);
 }
 
 namespace m5lcd {
@@ -116,22 +118,20 @@ namespace m5lcd {
                         bool isHeatControlEnabled,
                         int heatingPercentage,
                         int coolingPercentage,
-                        String formattedTime
+                        const String &formattedTime
     ) {
-        update_battery_level(M5.Power.getBatteryLevel());
+
+        showBatteryLevel(M5.Power.getBatteryLevel());
         showTime(formattedTime);
+
 
         switch (state) {
             case state_n::temperature:
-                showTemperature(temp, isHeatControlEnabled, heatingPercentage, coolingPercentage);
-                break;
-
-            case state_n::humidity:
-                showHumidity(hum);
+                showMainScreen(temp, targetTemp, hum, isHeatControlEnabled, heatingPercentage, coolingPercentage);
                 break;
 
             case state_n::setTargetTemperature:
-                showTargetTemperature(targetTemp);
+                showSetTargetTemp(targetTemp);
         }
     }
 

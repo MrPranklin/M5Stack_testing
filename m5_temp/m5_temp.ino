@@ -7,6 +7,7 @@
 #include <Wire.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include <Timer.h>
 
 #include "DHT22_C.hpp"
 #include "m5lcd.hpp"
@@ -16,14 +17,16 @@
 #include "mqtt_topics.h"
 #include "BME280.hpp"
 
+#define SET_TARGET_TEMP_DELAY 5000
+
 void callback(char *topic, byte *payload, unsigned int length);
 
 void setup_wifi();
 
 void check_buttons();
 
-const char *ssid = "Pranklin";
-const char *password = "MrPranklin";
+const char *ssid = "Martin Ruter King";
+const char *password = "volimkonje";
 const char *host = "M5Stack temp";
 
 const IPAddress mqtt_server = IPAddress(192, 168, 0, 24);
@@ -46,6 +49,9 @@ HeatControl *heatControl;
 
 float temp = 0.0;
 float hum = 0.0;
+
+Timer setTargetTempTimer;
+int setTargetTempEventId;
 
 void setup() {
     Serial.begin(115200);
@@ -77,6 +83,7 @@ void setup() {
 void loop() {
     ota::handle_client();
     timeClient.update();
+    setTargetTempTimer.update();
 
     if (!mqtt_client.loop()) {
         Serial.println("MQTT disconnected");
@@ -141,28 +148,48 @@ void set_state(state_n::StateEnum new_state) {
     );
 }
 
+void stopTimer() {
+    setTargetTempTimer.stop(setTargetTempEventId);
+}
+
+void restoreDefaultState() {
+    set_state(state_n::temperature);
+    stopTimer();
+}
+
+void initTimer() {
+    setTargetTempTimer.after(SET_TARGET_TEMP_DELAY, restoreDefaultState);
+}
+
+void resetTimer() {
+    stopTimer();
+    initTimer();
+}
+
 void check_buttons() {
     M5.update(); // reads button state
 
-    if (M5.BtnA.wasPressed()) {
+    if (M5.BtnA.wasPressed()) { // target+=0.5
         if (state == state_n::setTargetTemperature) {
+            resetTimer();
             float curr = heatControl->incrementTargetTemp(0.5);
             mqtt::updateTargetTemp(mqtt_client, curr);
         } else {
+            set_state(state_n::setTargetTemperature);
+            initTimer();
+        }
+    } else if (M5.BtnB.wasPressed()) { // OK
+        if (state == state_n::setTargetTemperature) {
+            stopTimer();
             set_state(state_n::temperature);
         }
-    } else if (M5.BtnB.wasPressed()) {
+    } else if (M5.BtnC.wasPressed()) { // target-=0.5
         if (state == state_n::setTargetTemperature) {
+            resetTimer();
             float curr = heatControl->incrementTargetTemp(-0.5);
             mqtt::updateTargetTemp(mqtt_client, curr);
         } else {
-            set_state(state_n::humidity);
-        }
-    } else if (M5.BtnC.wasPressed()) {
-        if (state == state_n::setTargetTemperature) {
-            set_state(oldState);
-        } else {
-            oldState = state;
+            initTimer();
             set_state(state_n::setTargetTemperature);
         }
     }
