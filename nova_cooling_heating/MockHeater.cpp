@@ -17,10 +17,6 @@ void MockHeater::turnOff() {
     analogWrite(this->_pin, 0);
 }
 
-bool MockHeater::isEnabled(){
-  return _isEnabled;
-}
-
 void MockHeater::setPercentage(int percentage) {
     if (percentage < 0) {
         this->_currentPercentage = 0;
@@ -35,4 +31,8 @@ void MockHeater::setPercentage(int percentage) {
 
 int MockHeater::getPercentage() {
     return this->_currentPercentage;
+}
+
+void MockHeater::update() {
+
 }

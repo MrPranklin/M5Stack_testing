@@ -5,7 +5,6 @@
 HeatControl::HeatControl(std::vector<Cooler *> coolers, std::vector<Heater *> heaters) {
     this->_coolers = std::move(coolers);
     this->_heaters = std::move(heaters);
-    this->_isEnabled = false;
 }
 
 HeatControl::~HeatControl() = default;
@@ -55,18 +54,6 @@ void HeatControl::turnOffAllHeaters() {
     }
 }
 
-void HeatControl::enable() {
-    this->_isEnabled = true;
-}
-
-void HeatControl::disable() {
-    this->_isEnabled = false;
-}
-
-bool HeatControl::isEnabled() {
-    return _isEnabled;
-}
-
 void HeatControl::setPercentageToAllHeaters(int percentage) {
     for (int i = 0; i < _heaters.size(); i++) {
         setPercentageToHeater(this->_heaters.at(i), percentage);
@@ -85,4 +72,13 @@ void HeatControl::setPercentageToCooler(Cooler *c, int percentage) {
 
 void HeatControl::setPercentageToHeater(Heater *h, int percentage) {
     h->setPercentage(percentage);
+}
+
+void HeatControl::update() {
+    for (auto & heater : _heaters) {
+        heater->update();
+    }
+    for(auto & cooler : _coolers){
+        cooler->update();
+    }
 }

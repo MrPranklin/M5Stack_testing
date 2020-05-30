@@ -12,11 +12,11 @@ public:
 
     void turnOff() override;
 
-    bool isEnabled() override;
-
     void setPercentage(int percentage) override;
 
     int getPercentage() override;
+
+    void update() override;
 
 private:
     int _pin;

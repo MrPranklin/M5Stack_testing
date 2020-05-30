@@ -12,6 +12,7 @@
 #include "MockHeater.hpp"
 #include "HeatControl.hpp"
 #include "mqtt_topics.h"
+#include "RelayHeater.hpp"
 
 void setupWifi();
 
@@ -33,7 +34,7 @@ void setup() {
     ota::begin();
 
     Cooler *c = new FanController(12);
-    Heater *h = new MockHeater(13);
+    Heater *h = new RelayHeater(13, 10000);
 
     std::vector<Cooler *> coolers;
     coolers.push_back(c);
@@ -42,7 +43,7 @@ void setup() {
     heaters.push_back(h);
 
     heatControl = new HeatControl(coolers, heaters);
-    heatControl->enable();
+    heatControl->turnOnAllHeaters();
 
     Serial.println("Setup finished");
 }
@@ -53,6 +54,8 @@ void loop() {
     if (!mqttClient.loop()) {
         Serial.println("MQTT disconnected");
         mqtt::reconnect(mqttClient);
+    } else {
+        heatControl->update();
     }
 }
 

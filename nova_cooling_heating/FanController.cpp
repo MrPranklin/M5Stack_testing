@@ -17,10 +17,6 @@ void FanController::turnOff() {
     analogWrite(this->_pin, 0);
 }
 
-bool FanController::isEnabled() {
-    return this->_isEnabled;
-}
-
 void FanController::setPercentage(int percentage) {
     if (percentage < 0) {
         this->_currentPercentage = 0;
@@ -35,4 +31,8 @@ void FanController::setPercentage(int percentage) {
 
 int FanController::getPercentage() {
     return this->_currentPercentage;
+}
+
+void FanController::update() {
+
 }

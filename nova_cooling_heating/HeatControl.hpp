@@ -11,13 +11,7 @@ public:
 
     ~HeatControl();
 
-    virtual void enable();
-
-    virtual void disable();
-
     virtual void turnEverythingOff();
-
-    virtual bool isEnabled();
 
     virtual void turnOnAllCoolers();
 
@@ -30,6 +24,8 @@ public:
     virtual void setPercentageToAllHeaters(int percentage);
 
     virtual void setPercentageToAllCoolers(int percentage);
+
+    virtual void update();
 
 protected:
     virtual void turnOnHeater(Heater *h);
@@ -47,7 +43,6 @@ protected:
     std::vector<Cooler *> _coolers;
     std::vector<Heater *> _heaters;
 
-    bool _isEnabled;
 };
 
 #endif //HEAT_CONTROL_H
