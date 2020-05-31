@@ -13,7 +13,8 @@ namespace m5lcd {
     void updateDisplay(state_n::StateEnum state,
                        bool isLightControlEnabled,
                        int naturalLightPercentage,
-                       int artificialLightPercentage
+                       int artificialLightPercentage,
+                       const String &formattedTime
     );
 
     void showSettingUp();

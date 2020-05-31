@@ -34,7 +34,7 @@ void setup() {
     ota::begin();
 
     Cooler *c = new FanController(12);
-    Heater *h = new RelayHeater(13, 10000);
+    Heater *h = new RelayHeater(5, 10000);
 
     std::vector<Cooler *> coolers;
     coolers.push_back(c);

@@ -4,16 +4,23 @@
 #include <WebServer.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
+#include <Timer.h>
+#include <cstdlib>
 
 #include "m5lcd.hpp"
 #include "mqtt.hpp"
 #include "ota.hpp"
 #include "LightControl.hpp"
 #include "mqtt_topics.h"
-#include "BrightnessSensor.hpp"
-#include "Potentiometer.hpp"
+
+#define SET_TARGET_DELAY 5000
+#define MQTT_UPDATE_INTERVAL 10000
 
 void setup_wifi();
+
+void mqttUpdate();
 
 bool checkButtons();
 
@@ -27,10 +34,16 @@ const int mqtt_port = 1883;
 state_n::StateEnum state = state_n::showCurrent;
 state_n::StateEnum oldState = state_n::showCurrent;
 
-long mqttLastMillis = 0;
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP);
 
 WiFiClient wifi_client;
 PubSubClient mqtt_client(wifi_client);
+
+Timer setTargetTimer;
+int setTargetEventId;
+
+Timer mqttUpdateTimer;
 
 LightControl *lightControl;
 
@@ -40,7 +53,7 @@ void setup() {
     M5.Power.begin();
     M5.Power.setPowerBoostKeepOn(false); // dont always output power
 
-    lightControl = new LightControl(mqtt_client);
+    lightControl = new LightControl();
 
     m5lcd::begin();
 
@@ -51,14 +64,20 @@ void setup() {
 
     ota::begin();
 
+    timeClient.begin();
+    timeClient.setTimeOffset(7200);
+
     m5lcd::clear();
 
     m5lcd::updateDisplay(
             state,
             lightControl->isEnabled(),
             lightControl->getNaturalLightPercentage(),
-            lightControl->getArtificialLightPercentage()
+            lightControl->getArtificialLightPercentage(),
+            timeClient.getFormattedTime()
     );
+
+    mqttUpdateTimer.every(MQTT_UPDATE_INTERVAL, mqttUpdate);
 
     Serial.println("Setup finished");
     m5lcd::showMessage("Setup done");
@@ -67,44 +86,36 @@ void setup() {
 
 void loop() {
     ota::handle_client();
+    timeClient.update();
 
     if (!mqtt_client.loop()) {
         Serial.println("MQTT disconnected");
         mqtt::reconnect(mqtt_client);
     } else {
-        if (checkButtons()) {
-            if (lightControl->isEnabled()) {
-                mqtt::updateNaturalLightPercentage(mqtt_client, lightControl->getNaturalLightPercentage());
-                mqtt::updateArtificialLightPercentage(mqtt_client, lightControl->getArtificialLightPercentage());
-            }
-        } else if (mqtt::shouldUpdate(millis(), mqttLastMillis)) {
-            if (lightControl->isEnabled()) {
-                mqtt::updateNaturalLightPercentage(mqtt_client, lightControl->getNaturalLightPercentage());
-                mqtt::updateArtificialLightPercentage(mqtt_client, lightControl->getArtificialLightPercentage());
-            }
+        setTargetTimer.update();
+        mqttUpdateTimer.update();
 
-            mqttLastMillis = millis();
+        if (checkButtons()) {
+            mqtt::updateNaturalLightPercentage(mqtt_client, lightControl->getNaturalLightPercentage());
+            mqtt::updateArtificialLightPercentage(mqtt_client, lightControl->getArtificialLightPercentage());
         }
-        {}
 
         if (m5lcd::isDisplayOn()) {
             m5lcd::updateDisplay(
                     state,
                     lightControl->isEnabled(),
                     lightControl->getNaturalLightPercentage(),
-                    lightControl->getArtificialLightPercentage()
+                    lightControl->getArtificialLightPercentage(),
+                    timeClient.getFormattedTime()
             );
         }
+    }
+}
 
-        if (mqtt::shouldUpdate(millis(), mqttLastMillis)) {
-
-            if (lightControl->isEnabled()) {
-                mqtt::updateNaturalLightPercentage(mqtt_client, lightControl->getNaturalLightPercentage());
-                mqtt::updateArtificialLightPercentage(mqtt_client, lightControl->getArtificialLightPercentage());
-            }
-
-            mqttLastMillis = millis();
-        }
+void mqttUpdate() {
+    if (lightControl->isEnabled()) {
+        mqtt::updateNaturalLightPercentage(mqtt_client, lightControl->getNaturalLightPercentage());
+        mqtt::updateArtificialLightPercentage(mqtt_client, lightControl->getArtificialLightPercentage());
     }
 }
 
@@ -121,8 +132,27 @@ void setState(state_n::StateEnum newState) {
             state,
             lightControl->isEnabled(),
             lightControl->getNaturalLightPercentage(),
-            lightControl->getArtificialLightPercentage()
+            lightControl->getArtificialLightPercentage(),
+            timeClient.getFormattedTime()
     );
+}
+
+void stopTimer() {
+    setTargetTimer.stop(setTargetEventId);
+}
+
+void restoreDefaultState() {
+    setState(state_n::showCurrent);
+    stopTimer();
+}
+
+void initTimer() {
+    setTargetTimer.after(SET_TARGET_DELAY, restoreDefaultState);
+}
+
+void resetTimer() {
+    stopTimer();
+    initTimer();
 }
 
 bool checkButtons() {
@@ -131,25 +161,33 @@ bool checkButtons() {
     if (M5.BtnA.wasPressed()) {
         if (state == state_n::showCurrent) {
             setState(state_n::setNatural);
+            initTimer();
         } else if (state == state_n::setArtificial) {
-            int curr = lightControl->incrementArtificialLight(5);
+            lightControl->incrementArtificialLight(5);
+            resetTimer();
         } else if (state == state_n::setNatural) {
-            int curr = lightControl->incrementNaturalLight(5);
+            lightControl->incrementNaturalLight(5);
+            resetTimer();
         }
 
         return true;
     } else if (M5.BtnB.wasPressed()) {
+        setState(state_n::showCurrent);
+        stopTimer();
+
+    } else if (M5.BtnC.wasPressed()) {
         if (state == state_n::showCurrent) {
             setState(state_n::setArtificial);
+            initTimer();
         } else if (state == state_n::setArtificial) {
-            int curr = lightControl->incrementArtificialLight(-5);
+            lightControl->incrementArtificialLight(-5);
+            resetTimer();
         } else if (state == state_n::setNatural) {
-            int curr = lightControl->incrementNaturalLight(-5);
+            lightControl->incrementNaturalLight(-5);
+            resetTimer();
         }
 
         return true;
-    } else if (M5.BtnC.wasPressed()) {
-        setState(state_n::showCurrent);
     }
 
     return false;
@@ -171,15 +209,18 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length) {
             lightControl->enable();
             mqtt::confirmLightControlOn(mqtt_client);
 
-            mqtt::updateNaturalLightPercentage(mqtt_client, lightControl->getNaturalLightPercentage());
-            mqtt::updateArtificialLightPercentage(mqtt_client, lightControl->getArtificialLightPercentage());
-
             m5lcd::clear();
         } else if (pyld == "OFF") {
             lightControl->disable();
             mqtt::confirmLightControlOff(mqtt_client);
             m5lcd::clear();
         }
+    } else if (strTopic == mqtt_state_artificial) {
+        lightControl->setArtificialLightPercentage(atof((const char *) payload));
+        m5lcd::clear();
+    } else if (strTopic == mqtt_state_natural) {
+        lightControl->setNaturalLightPercentage(atof((const char *) payload));
+        m5lcd::clear();
     }
 }
 

@@ -13,9 +13,8 @@
 #define PID_INTERVAL 1000
 #define PID_THRESHOLD 5
 
-HeatControl::HeatControl(TempSensor *tempSensor, PubSubClient client) {
+HeatControl::HeatControl(TempSensor *tempSensor) {
     this->_tempSensor = tempSensor;
-    this->_client = client;
     this->_autopid = new AutoPID(&_currentTempDouble, &_targetTempDouble, &PID_output, OUTPUT_MIN, OUTPUT_MAX, KP, KI,
                                  0);
     this->_autopid->setBangBang(PID_THRESHOLD); // if the diff is 5, rank it up to max
@@ -57,10 +56,7 @@ bool HeatControl::isEnabled() {
     return _isEnabled;
 }
 
-bool HeatControl::update() {
-    bool valuesChanged = false;
-
-    bool isEnabled = this->isEnabled();
+void HeatControl::update() {
 
     if (this->isEnabled()) {
         _currentTemp = getCurrentTemp();
@@ -82,8 +78,6 @@ bool HeatControl::update() {
             }
         }
     }
-
-    return isEnabled && valuesChanged;
 }
 
 int HeatControl::getCoolingPercentage() {

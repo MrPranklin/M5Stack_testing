@@ -43,6 +43,22 @@ namespace mqtt {
                     Serial.println(mqtt_command_light_control);
                 }
 
+                if (client.subscribe(mqtt_state_artificial)) {
+                    Serial.print("Subscribed to ");
+                    Serial.println(mqtt_state_artificial);
+                } else {
+                    Serial.print("Failed to subscribe to ");
+                    Serial.println(mqtt_state_artificial);
+                }
+
+                if (client.subscribe(mqtt_state_natural)) {
+                    Serial.print("Subscribed to ");
+                    Serial.println(mqtt_state_natural);
+                } else {
+                    Serial.print("Failed to subscribe to ");
+                    Serial.println(mqtt_state_natural);
+                }
+
                 m5lcd::clear();
             } else {
                 Serial.print("failed, rc=");

@@ -1,8 +1,6 @@
 #ifndef HEAT_CONTROL_H
 #define HEAT_CONTROL_H
 
-#include <PubSubClient.h>
-
 #include "TempSensor.hpp"
 #include "Cooler.hpp"
 #include "Heater.hpp"
@@ -12,13 +10,13 @@
 
 class HeatControl {
 public:
-    HeatControl(TempSensor *tempSensor, PubSubClient client);
+    explicit HeatControl(TempSensor *tempSensor);
 
     ~HeatControl();
 
     virtual void setTargetTemp(float temp);
 
-    virtual bool update();
+    virtual void update();
 
     virtual void enable();
 
@@ -42,7 +40,6 @@ protected:
     virtual float getCurrentTemp();
 
     TempSensor *_tempSensor;
-    PubSubClient _client;
     AutoPID *_autopid;
     bool _isEnabled{false};
     float _targetTemp{22};

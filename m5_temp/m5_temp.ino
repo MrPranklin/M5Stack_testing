@@ -18,10 +18,13 @@
 #include "BME280.hpp"
 
 #define SET_TARGET_TEMP_DELAY 5000
+#define MQTT_UPDATE_INTERVAL 10000
 
 void callback(char *topic, byte *payload, unsigned int length);
 
 void setup_wifi();
+
+void mqttUpdate();
 
 void check_buttons();
 
@@ -35,7 +38,6 @@ const int mqtt_port = 1883;
 state_n::StateEnum state = state_n::temperature;
 state_n::StateEnum oldState = state_n::temperature;
 
-long mqttLastMillis = 0;
 
 BME280 bme;
 
@@ -52,6 +54,8 @@ float hum = 0.0;
 
 Timer setTargetTempTimer;
 int setTargetTempEventId;
+
+Timer mqttUpdateTimer;
 
 void setup() {
     Serial.begin(115200);
@@ -70,10 +74,13 @@ void setup() {
     ota::begin();
 
     timeClient.begin();
+    timeClient.setTimeOffset(7200);
 
     bme.begin();
 
-    heatControl = new HeatControl(&bme, mqtt_client);
+    heatControl = new HeatControl(static_cast<TempSensor *>(&bme));
+
+    mqttUpdateTimer.every(MQTT_UPDATE_INTERVAL, mqttUpdate);
 
     Serial.println("Setup finished");
     m5lcd::showMessage("Setup done");
@@ -84,6 +91,7 @@ void loop() {
     ota::handle_client();
     timeClient.update();
     setTargetTempTimer.update();
+    mqttUpdateTimer.update();
 
     if (!mqtt_client.loop()) {
         Serial.println("MQTT disconnected");
@@ -92,10 +100,7 @@ void loop() {
         temp = bme.readTemperature();
         hum = bme.readHumidity();
 
-        if (heatControl->update()) {
-            mqtt::updateHeatingPercentage(mqtt_client, heatControl->getHeatingPercentage());
-            mqtt::updateCoolingPercentage(mqtt_client, heatControl->getCoolingPercentage());
-        }
+        heatControl->update();
 
         check_buttons();
 
@@ -111,20 +116,17 @@ void loop() {
                     timeClient.getFormattedTime()
             );
         }
-
-        if (mqtt::shouldUpdate(millis(), mqttLastMillis)) {
-
-            if (heatControl->isEnabled()) {
-                mqtt::updateHeatingPercentage(mqtt_client, heatControl->getHeatingPercentage());
-                mqtt::updateCoolingPercentage(mqtt_client, heatControl->getCoolingPercentage());
-            }
-
-            mqtt::publish_temperature(mqtt_client, temp);
-            mqtt::publish_humidity(mqtt_client, hum);
-
-            mqttLastMillis = millis();
-        }
     }
+}
+
+void mqttUpdate() {
+    if (heatControl->isEnabled()) {
+        mqtt::updateHeatingPercentage(mqtt_client, heatControl->getHeatingPercentage());
+        mqtt::updateCoolingPercentage(mqtt_client, heatControl->getCoolingPercentage());
+    }
+
+    mqtt::publish_temperature(mqtt_client, temp);
+    mqtt::publish_humidity(mqtt_client, hum);
 }
 
 void set_state(state_n::StateEnum new_state) {

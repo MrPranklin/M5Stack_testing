@@ -1,14 +1,11 @@
 #ifndef LIGHT_CONTROL_H
 #define LIGHT_CONTROL_H
 
-#include <PubSubClient.h>
-
-#include "BrightnessSensor.hpp"
 #include <vector>
 
 class LightControl {
 public:
-    explicit LightControl(PubSubClient client);
+    LightControl() = default;
 
     ~LightControl() = default;
 
@@ -31,7 +28,6 @@ public:
     virtual int incrementNaturalLight(int amount);
 
 protected:
-    PubSubClient _client;
     bool _isEnabled{false};
 
     int _currentNaturalLightPercentage{0};

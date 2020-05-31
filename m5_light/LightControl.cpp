@@ -4,10 +4,6 @@
 #include "LightControl.hpp"
 #include "mqtt.hpp"
 
-LightControl::LightControl(PubSubClient client) {
-    this->_client = client;
-}
-
 void LightControl::enable() {
     this->_isEnabled = true;
 }
