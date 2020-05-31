@@ -9,21 +9,21 @@ LedController::LedController(int pin) {
 void LedController::turnOn() {
     int valueToWrite = map(getPercentage(), 0, 100, 0, 255);
     analogWrite(this->_pin, valueToWrite);
-    this->_isOn = true;
+    this->_isEnabled = true;
 }
 
 void LedController::turnOff() {
     analogWrite(this->_pin, 0);
-    this->_isOn = false;
+    this->_isEnabled = false;
 }
 
 bool LedController::toggle() {
-    if(isOn()){
+    if(_isEnabled){
         turnOff();
     } else {
         turnOn();
     }
-    return isOn();
+    return _isEnabled;
 }
 
 void LedController::setPercentage(int percentage) {
@@ -42,6 +42,6 @@ int LedController::getPercentage() {
     return this->_currentPercentage;
 }
 
-bool LedController::isOn() {
-    return this->_isOn;
+void LedController::update() {
+
 }

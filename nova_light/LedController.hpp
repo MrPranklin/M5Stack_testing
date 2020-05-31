@@ -1,11 +1,11 @@
-#ifndef LIGHTCONTROLLER_H
-#define LIGHTCONTROLLER_H
+#ifndef LEDCONTROLLER_H
+#define LEDCONTROLLER_H
 
-#include "Light.hpp"
+#include "ArtificialSource.hpp"
 
-class LedController : public Light {
+class LedController : public ArtificialSource {
 public:
-    LedController(int pin);
+    explicit LedController(int pin);
 
     void turnOn() override;
 
@@ -13,14 +13,15 @@ public:
 
     bool toggle() override;
 
-    bool isOn() override;
-
     void setPercentage(int percentage) override;
 
     int getPercentage() override;
 
+    void update() override;
+
 protected:
     int _pin;
+    int _currentPercentage{0};
 };
 
-#endif // LIGHTCONTROLLER_H
+#endif // LEDCONTROLLER_H

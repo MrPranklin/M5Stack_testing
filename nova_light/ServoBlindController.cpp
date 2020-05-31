@@ -7,11 +7,11 @@ ServoBlindController::ServoBlindController(int pin, int fullyOpenedPosition) {
     _servo->attach(pin);
 }
 
-void ServoBlindController::open() {
+void ServoBlindController::turnOn() {
     setPercentage(100);
 }
 
-void ServoBlindController::close() {
+void ServoBlindController::turnOff() {
     setPercentage(0);
 }
 
@@ -30,4 +30,8 @@ void ServoBlindController::setPercentage(int percentage) {
 
     int positionToWrite = (getPercentage() / 100.0) * this->_fullyOpenedPosition;
     _servo->write(positionToWrite);
+}
+
+void ServoBlindController::update() {
+
 }

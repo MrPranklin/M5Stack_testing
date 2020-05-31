@@ -33,14 +33,14 @@ namespace mqtt {
                 // ... and resubscribe
                 Serial.println("Subscribed to ");
 
-                if (client.subscribe(mqtt_command_light)) {
+                if (client.subscribe(mqtt_command_artificial)) {
                     Serial.print("    ");
-                    Serial.println(mqtt_command_light);
+                    Serial.println(mqtt_command_artificial);
                 }
 
-                if (client.subscribe(mqtt_command_blinds)) {
+                if (client.subscribe(mqtt_command_natural)) {
                     Serial.print("    ");
-                    Serial.println(mqtt_command_blinds);
+                    Serial.println(mqtt_command_natural);
                 }
             } else {
                 Serial.print("failed, rc=");

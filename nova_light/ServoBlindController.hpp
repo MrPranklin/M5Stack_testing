@@ -1,20 +1,22 @@
 #ifndef SERVOBLINDCONTROLLER_H
 #define SERVOBLINDCONTROLLER_H
 
-#include "Blinds.hpp"
+#include "NaturalSource.hpp"
 #include <Servo.h>
 
-class ServoBlindController : public Blinds {
+class ServoBlindController : public NaturalSource {
 public:
     ServoBlindController(int pin, int fullyOpenedPosition);
 
-    void open() override;
+    void turnOn() override;
 
-    void close() override;
+    void turnOff() override;
 
     int getPercentage() override;
 
     void setPercentage(int percentage) override;
+
+    void update() override ;
 
 private:
     int _pin;

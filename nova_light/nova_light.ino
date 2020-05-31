@@ -3,9 +3,10 @@
 #include <iostream>
 #include <sstream>
 
-#include "ServoBlindController.hpp"
+#include "LightControl.hpp"
 #include "mqtt.hpp"
 #include "MqttTopics.h"
+#include "ServoBlindController.hpp"
 #include "LedController.hpp"
 
 #define SERVO_PIN 4
@@ -23,14 +24,21 @@ const int mqttServerPort = 1883;
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
 
-ServoBlindController *servo;
-LedController *led;
+LightControl *lightControl;
 
 void setup() {
     Serial.begin(115200);
 
-    servo = new ServoBlindController(SERVO_PIN, 180);
-    led = new LedController(LED_PIN);
+    NaturalSource *servo = new ServoBlindController(SERVO_PIN, 180);
+    ArtificialSource *led = new LedController(LED_PIN);
+
+    std::vector<ArtificialSource *> artificials;
+    artificials.push_back(led);
+
+    std::vector<NaturalSource *> naturals;
+    naturals.push_back(servo);
+
+    lightControl = new LightControl(artificials, naturals);
     setupWifi();
 }
 
@@ -56,10 +64,10 @@ void callback(char *topic, byte *payload, unsigned int length) {
     int intValue;
     strValue >> intValue;
 
-    if (strTopic == mqtt_command_blinds) {
-        servo->setPercentage(intValue);
-    } else if (strTopic == mqtt_command_light) {
-        led->setPercentage(intValue);
+    if (strTopic == mqtt_command_natural) {
+        lightControl->setPercentageToAllNaturals(intValue);
+    } else if (strTopic == mqtt_command_artificial) {
+        lightControl->setPercentageToAllArtificials(intValue);
     }
 }
 
